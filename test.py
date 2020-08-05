@@ -26,7 +26,7 @@ if __name__ == '__main__':
             latent = vae.latent_sample(latent_mu, latent_logvar)
             tensor_list = []
             for j in range(-20,21,40):
-                latent[:,i:i+100] = j / 10.
+                latent[:,i] += j / 10.
                 image_recon = vae.decoder(latent, econv1, econv2, econv3, econv4)
                 image_recon = image_recon.squeeze(0).cpu()
                 tensor_list.append(image_recon)
