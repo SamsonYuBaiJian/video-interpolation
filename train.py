@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 # parameters
 num_epochs = 150
-batch_size = 64
+batch_size = 32
 learning_rate = 1e-4
 use_gpu = True
 show_images_every = 10
