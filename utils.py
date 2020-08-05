@@ -57,7 +57,6 @@ class VimeoDataset(Dataset):
 # show middle frame with first and last frames
 def imshow(inp):
     """Imshow for Tensor."""
-    print(inp.shape)
     inp = inp.numpy().transpose((1, 2, 0))
     # mean = np.array(means)
     # std = np.array(stds)

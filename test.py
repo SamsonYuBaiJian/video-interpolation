@@ -20,16 +20,14 @@ if __name__ == '__main__':
     vae.eval()
 
     with torch.no_grad():
-        for i in range(0,50,10):
+        for i in range(0,400,50):
             # latent_mu, latent_logvar = vae.encoder(first, last)
             latent_mu, latent_logvar, econv1, econv2, econv3, econv4 = vae.encoder(test1.unsqueeze(0).to(device), test2.unsqueeze(0).to(device))
             latent = vae.latent_sample(latent_mu, latent_logvar)
             tensor_list = []
             for j in range(-20,21,40):
-                # latent[:,i] = j / 10.
+                latent[:,i:i+50] = j / 10.
                 image_recon = vae.decoder(latent, econv1, econv2, econv3, econv4)
                 image_recon = image_recon.squeeze(0).cpu()
-                print(image_recon.shape)
-                print("GGG")
-            # time.sleep(10)
+                tensor_list.append(image_recon)
             imshow(torchvision.utils.make_grid(tensor_list))

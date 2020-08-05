@@ -23,8 +23,7 @@ def save_optical_flow(video_dir, text_split):
             last = cv2.imread(frames[2])
             last = cv2.cvtColor(last, cv2.COLOR_BGR2GRAY)
             flow = cv2.calcOpticalFlowFarneback(first, last, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-
-    np.save('./flow.npy', flow)
+            np.save(os.path.join('/'.join(frames[0].split('/')[:-1]),'flow.npy'), flow)
 
 if __name__ == '__main__':
-    save_optical_flow(video_dir)
+    save_optical_flow('./vimeo-90k/vimeo_triplet/sequences', './vimeo-90k/vimeo_triplet/tri_trainlist.txt')
