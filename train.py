@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     current_best_eval_psnr = 0
 
-    print('\nTraining ...')
+    print('\nTraining...')
     for epoch in range(num_epochs):
         train_loss_avg.append(0)
         train_psnr_avg.append(0)
