@@ -1,7 +1,8 @@
 import torch
 import torchvision
 from torch.utils.data import DataLoader, Dataset
-from PIL import Image
+import PIL
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
