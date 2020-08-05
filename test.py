@@ -1,6 +1,10 @@
 import PIL
 import torchvision.transforms as transforms
 from utils import imshow
+import numpy as np
+import torch
+import torchvision
+
 
 test = PIL.Image.open('test.jpg')
 test1 = PIL.Image.fromarray(np.asarray(test)[:,:800,:])

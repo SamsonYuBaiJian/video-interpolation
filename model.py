@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 capacity = 64
 latent_dims = 512
 variational_beta = 1

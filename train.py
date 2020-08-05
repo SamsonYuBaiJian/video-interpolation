@@ -32,13 +32,19 @@ if __name__ == '__main__':
     test_loss_avg = []
     test_psnr_avg = []
 
+    print('Building dataloaders...')
+
     trainset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_trainlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
     testset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_testlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
 
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=0)
     testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=0)
 
-    print('Training ...')
+    print('Dataloaders successfully built!')
+
+    current_best_eval_psnr = 0
+
+    print('\nTraining ...')
     for epoch in range(num_epochs):
         train_loss_avg.append(0)
         train_psnr_avg.append(0)
@@ -77,6 +83,8 @@ if __name__ == '__main__':
             
             train_loss_avg[-1] += loss.item()
             num_batches += 1
+
+            break
 
         train_loss_avg[-1] /= num_batches
         train_psnr_avg[-1] /= num_batches
@@ -119,6 +127,12 @@ if __name__ == '__main__':
                 test_loss_avg[-1] /= num_batches
                 test_psnr_avg[-1] /= num_batches
                 print('Average TEST reconstruction error: %f, TEST PSNR: %f' % (test_loss_avg[-1], test_psnr_avg[-1]))
+
+            if test_psnr_avg[-1] > current_best_eval_psnr:
+                print("Saving new best model...")
+                current_best_eval_psnr = test_psnr_avg[-1]
+                torch.save(vae, './model.pt')
+
             vae.train()
 
 
