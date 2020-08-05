@@ -12,22 +12,18 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         c = capacity
         self.conv1 = nn.Conv2d(in_channels=6, out_channels=c, kernel_size=4, stride=2, padding=1) # out: c x 128 x 224
-        self.bn1 = nn.BatchNorm2d(c)
         self.conv2 = nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1) # out: 2c x 64 x 112
-        self.bn2 = nn.BatchNorm2d(2*c)
         self.conv3 = nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1) # out: 2c x 32 x 56
-        self.bn3 = nn.BatchNorm2d(2*c)
         self.conv4 = nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1) # out: 3c x 16 x 28
-        self.bn4 = nn.BatchNorm2d(3*c)
         self.fc_mu = nn.Linear(in_features=c*3*16*28, out_features=latent_dims)
         self.fc_logvar = nn.Linear(in_features=c*3*16*28, out_features=latent_dims)
             
     def forward(self, first, last):
         x = torch.cat([first, last], 1)
-        econv1 = F.relu(self.bn1(self.conv1(x)))
-        econv2 = F.relu(self.bn2(self.conv2(econv1)))
-        econv3 = F.relu(self.bn3(self.conv3(econv2)))
-        econv4 = F.relu(self.bn4(self.conv4(econv3)))
+        econv1 = F.relu(self.conv1(x))
+        econv2 = F.relu(self.conv2(econv1))
+        econv3 = F.relu(self.conv3(econv2))
+        econv4 = F.relu(self.conv4(econv3))
         x = econv4.view(econv4.size(0), -1) # flatten batch of multi-channel feature maps to a batch of feature vectors
         # notice, here we use use x for mu and for variance! 
         x_mu = self.fc_mu(x) 
@@ -39,22 +35,17 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         c = capacity
         self.fc = nn.Linear(in_features=latent_dims, out_features=c*3*16*28)
-        self.bn4 = nn.BatchNorm2d(c*3)
         self.conv4 = nn.ConvTranspose2d(in_channels=c*3*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
-        self.bn3 = nn.BatchNorm2d(c*2)
         self.conv3 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
-        self.bn2 = nn.BatchNorm2d(c*2)
         self.conv2 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c, kernel_size=4, stride=2, padding=1)
-        self.bn1 = nn.BatchNorm2d(c)
         self.conv1 = nn.ConvTranspose2d(in_channels=c*2, out_channels=3, kernel_size=4, stride=2, padding=1)
             
     def forward(self, x, econv1, econv2, econv3, econv4):
         x = self.fc(x)
         x = x.view(x.size(0), capacity*3, 16, 28) # unflatten batch of feature vectors to a batch of multi-channel feature maps
-        x = self.bn4(x)
-        dconv4 = F.relu(self.bn3(self.conv4(torch.cat([x, econv4], dim=1))))
-        dconv3 = F.relu(self.bn2(self.conv3(torch.cat([dconv4, econv3], dim=1))))
-        dconv2 = F.relu(self.bn1(self.conv2(torch.cat([dconv3, econv2], dim=1))))
+        dconv4 = F.relu(self.conv4(torch.cat([x, econv4], dim=1)))
+        dconv3 = F.relu(self.conv3(torch.cat([dconv4, econv3], dim=1)))
+        dconv2 = F.relu(self.conv2(torch.cat([dconv3, econv2], dim=1)))
         img = self.conv1(torch.cat([dconv2, econv1], dim=1))
         return img
 

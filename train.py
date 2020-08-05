@@ -84,8 +84,6 @@ if __name__ == '__main__':
             train_loss_avg[-1] += loss.item()
             num_batches += 1
 
-            break
-
         train_loss_avg[-1] /= num_batches
         train_psnr_avg[-1] /= num_batches
         print('Epoch [%d / %d] average TRAIN reconstruction error: %f, TRAIN PSNR: %f' % (epoch+1, num_epochs, train_loss_avg[-1], train_psnr_avg[-1]))
