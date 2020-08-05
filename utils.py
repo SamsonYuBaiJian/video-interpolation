@@ -6,11 +6,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class VimeoDataset(Dataset):
   def __init__(self, video_dir, text_split, transform=None):
     """
     Args:
-
         video_dir (string): Vimeo-90k sequences directory.
         transform (callable, optional): Optional transform to be applied
             on a sample.
