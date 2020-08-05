@@ -31,8 +31,8 @@ train_psnr_avg = []
 test_loss_avg = []
 test_psnr_avg = []
 
-trainset = VimeoDataset(video_dir='./sequences', text_split='./tri_trainlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
-testset = VimeoDataset(video_dir='./sequences', text_split='./tri_testlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
+trainset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_trainlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
+testset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_testlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
 
 trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
 testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=4)
