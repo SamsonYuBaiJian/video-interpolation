@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 # parameters
 num_epochs = 150
-batch_size = 32
+batch_size = 64
 learning_rate = 1e-4
 use_gpu = True
 show_images_every = 10
@@ -34,8 +34,8 @@ test_psnr_avg = []
 trainset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_trainlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
 testset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_testlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
 
-trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
-testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=4)
+trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=0)
+testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=0)
 
 print('Training ...')
 for epoch in range(num_epochs):
