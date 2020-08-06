@@ -34,7 +34,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.c = c
         # self.fc = nn.Linear(in_features=latent_dims, out_features=c*3*16*28)
-        # self.conv4 = nn.ConvTranspose2d(in_channels=c*3, out_channels=c*2, kernel_size=4, stride=2, padding=1)
+        self.conv4 = nn.ConvTranspose2d(in_channels=c*3, out_channels=c*2, kernel_size=4, stride=2, padding=1)
         # self.conv3 = nn.ConvTranspose2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
         # self.conv2 = nn.ConvTranspose2d(in_channels=c*2, out_channels=c, kernel_size=4, stride=2, padding=1)
         # self.conv1 = nn.ConvTranspose2d(in_channels=c, out_channels=3, kernel_size=4, stride=2, padding=1)
@@ -46,7 +46,7 @@ class Decoder(nn.Module):
     def forward(self, x, econv1, econv2, econv3):
         # x = self.fc(x)
         # x = x.view(x.size(0), self.c*3, 16, 28)
-        # x = F.relu(self.conv4(torch.cat([x, econv4], dim=1)))
+        x = F.relu(self.conv4(x))
         x = F.relu(self.conv3(torch.cat([x, econv3], dim=1)))
         x = F.relu(self.conv2(torch.cat([x, econv2], dim=1)))
         img = self.conv1(torch.cat([x, econv1], dim=1))
