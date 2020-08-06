@@ -23,7 +23,6 @@ class Encoder(nn.Module):
         econv3 = F.relu(self.conv3(econv2))
         latent = F.relu(self.conv4(econv3))
         # x = econv4.view(econv4.size(0), -1)
-        # latent = self.fc(x)
         # x_mu = self.fc_mu(x) 
         # x_logvar = self.fc_logvar(x)
         # return x_mu, x_logvar
@@ -76,18 +75,7 @@ class Autoencoder(nn.Module):
     #         return mu
 
 # def vae_loss(recon_x, x, mu, logvar):
-#     # recon_x is the probability of a multivariate Bernoulli distribution p.
-#     # -log(p(x)) is then the pixel-wise binary cross-entropy.
-#     # Averaging or not averaging the binary cross-entropy over all pixels here
-#     # is a subtle detail with big effect on training, since it changes the weight
-#     # we need to pick for the other loss term by several orders of magnitude.
-#     # Not averaging is the direct implementation of the negative log likelihood,
-#     # but averaging makes the weight of the other loss term independent of the image resolution.
 #     recon_loss = F.mse_loss(recon_x.view(-1, 3*256*448), x.view(-1, 3*256*448), reduction='sum')
-    
-#     # KL-divergence between the prior distribution over latent vectors
-#     # (the one we are going to sample from when generating new images)
-#     # and the distribution estimated by the generator for the given image.
 #     kldivergence = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    
+
 #     return recon_loss + variational_beta * kldivergence

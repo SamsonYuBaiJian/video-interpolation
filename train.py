@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str)
-    parser.add_argument('--show_images_every', default=10, type=int)
+    # parser.add_argument('--show_images_every', default=10, type=int)
     parser.add_argument('--eval_every', default=10, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt')
@@ -90,10 +90,6 @@ if __name__ == '__main__':
         train_loss_avg[-1] /= num_batches
         train_psnr_avg[-1] /= num_batches
         print('Train error: %f, Train PSNR: %f' % (train_loss_avg[-1], train_psnr_avg[-1]))
-        # print('Epoch [%d / %d] average TRAIN reconstruction error: %f, TRAIN PSNR: %f' % (epoch+1, num_epochs, train_loss_avg[-1], train_psnr_avg[-1]))
-        
-        # if (epoch+1) % args.show_images_every == 0:
-        #     generate(model, testset, 5, device)
 
         if (epoch+1) % args.eval_every == 0:
             test_loss_avg.append(0)
@@ -127,7 +123,6 @@ if __name__ == '__main__':
 
                 test_loss_avg[-1] /= num_batches
                 test_psnr_avg[-1] /= num_batches
-                # print('Average TEST reconstruction error: %f, TEST PSNR: %f' % (test_loss_avg[-1], test_psnr_avg[-1]))
                 print('Test error: %f, Test PSNR: %f' % (test_loss_avg[-1], test_psnr_avg[-1]))
 
             if test_psnr_avg[-1] > current_best_eval_psnr:
