@@ -23,10 +23,14 @@ if __name__ == '__main__':
         for i in range(0,400,50):
             # latent_mu, latent_logvar = vae.encoder(first, last)
             latent_mu, latent_logvar, econv1, econv2, econv3, econv4 = vae.encoder(test1.unsqueeze(0).to(device), test2.unsqueeze(0).to(device))
-            latent = vae.latent_sample(latent_mu, latent_logvar)
+            # print(latent_mu.shape, latent_logvar.shape)
+            random_mu = torch.rand_like(latent_mu)
+            random_logvar = torch.rand_like(latent_logvar)
+            latent = vae.latent_sample(random_mu, random_logvar)
             tensor_list = []
             for j in range(-20,21,40):
-                latent[:,i] += j / 10.
+                # latent[:,i:40] += j / 10.
+                print(latent)
                 image_recon = vae.decoder(latent, econv1, econv2, econv3, econv4)
                 image_recon = image_recon.squeeze(0).cpu()
                 tensor_list.append(image_recon)

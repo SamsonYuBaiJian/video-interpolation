@@ -83,6 +83,7 @@ if __name__ == '__main__':
             
             train_loss_avg[-1] += loss.item()
             num_batches += 1
+            break
 
         train_loss_avg[-1] /= num_batches
         train_psnr_avg[-1] /= num_batches
@@ -110,7 +111,7 @@ if __name__ == '__main__':
                     mid_recon, latent_mu, latent_logvar = vae(first, last)
                     
                     # reconstruction error
-                    loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
+                    loss = torch.nn.MSE_Loss()(mid_recon, mid, latent_mu, latent_logvar)
 
                     # PSNR
                     mid_recon = mid_recon.detach().to('cpu').numpy()

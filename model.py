@@ -11,7 +11,7 @@ class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
         c = capacity
-        self.conv1 = nn.Conv2d(in_channels=6, out_channels=c, kernel_size=4, stride=2, padding=1) # out: c x 128 x 224
+        self.conv1 = nn.Conv2d(in_channels=9, out_channels=c, kernel_size=4, stride=2, padding=1) # out: c x 128 x 224
         self.conv2 = nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1) # out: 2c x 64 x 112
         self.conv3 = nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1) # out: 2c x 32 x 56
         self.conv4 = nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1) # out: 3c x 16 x 28
@@ -20,33 +20,33 @@ class Encoder(nn.Module):
             
     def forward(self, first, last):
         x = torch.cat([first, last], 1)
-        econv1 = F.relu(self.conv1(x))
-        econv2 = F.relu(self.conv2(econv1))
-        econv3 = F.relu(self.conv3(econv2))
-        econv4 = F.relu(self.conv4(econv3))
-        x = econv4.view(econv4.size(0), -1) # flatten batch of multi-channel feature maps to a batch of feature vectors
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
+        x = x.view(x.size(0), -1) # flatten batch of multi-channel feature maps to a batch of feature vectors
         # notice, here we use use x for mu and for variance! 
         x_mu = self.fc_mu(x) 
         x_logvar = self.fc_logvar(x) #we don't calculate this from x_mu but from x!! This is crutial. 
-        return x_mu, x_logvar, econv1, econv2, econv3, econv4
+        return x_mu, x_logvar
 
 class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()
         c = capacity
         self.fc = nn.Linear(in_features=latent_dims, out_features=c*3*16*28)
-        self.conv4 = nn.ConvTranspose2d(in_channels=c*3*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
-        self.conv3 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
-        self.conv2 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c, kernel_size=4, stride=2, padding=1)
+        self.conv4 = nn.ConvTranspose2d(in_channels=c*3, out_channels=c*2, kernel_size=4, stride=2, padding=1)
+        self.conv3 = nn.ConvTranspose2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
+        self.conv2 = nn.ConvTranspose2d(in_channels=c*2, out_channels=c, kernel_size=4, stride=2, padding=1)
         self.conv1 = nn.ConvTranspose2d(in_channels=c*2, out_channels=3, kernel_size=4, stride=2, padding=1)
             
-    def forward(self, x, econv1, econv2, econv3, econv4):
+    def forward(self, x):
         x = self.fc(x)
         x = x.view(x.size(0), capacity*3, 16, 28) # unflatten batch of feature vectors to a batch of multi-channel feature maps
-        dconv4 = F.relu(self.conv4(torch.cat([x, econv4], dim=1)))
-        dconv3 = F.relu(self.conv3(torch.cat([dconv4, econv3], dim=1)))
-        dconv2 = F.relu(self.conv2(torch.cat([dconv3, econv2], dim=1)))
-        img = self.conv1(torch.cat([dconv2, econv1], dim=1))
+        x = F.relu(self.conv4(x))
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv2(x))
+        img = self.conv1(x)
         return img
 
 class VariationalAutoencoder(nn.Module):
@@ -57,12 +57,12 @@ class VariationalAutoencoder(nn.Module):
     
     def forward(self, first, last):
         # remember our encoder output consists of x_mu and x_logvar
-        latent_mu, latent_logvar, econv1, econv2, econv3, econv4 = self.encoder(first, last)
+        latent_mu, latent_logvar = self.encoder(first, last)
         # we sample from the distributions defined by mu and logvar
         # (function latent_sample defined below)
         latent = self.latent_sample(latent_mu, latent_logvar)
-        x_recon = self.decoder(latent, econv1, econv2, econv3, econv4)
-        return x_recon, latent_mu, latent_logvar
+        x_recon = self.decoder(latent)
+        return x_recon, latent
     
     def latent_sample(self, mu, logvar):
         if self.training:
