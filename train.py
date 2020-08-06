@@ -84,6 +84,7 @@ if __name__ == '__main__':
             num_batches += 1
 
             if args.max_num_images is not None:
+                print((args.max_num_images, args.batch_size))
                 if num_batches == int(args.max_num_images / args.batch_size):
                     break
 
@@ -122,7 +123,6 @@ if __name__ == '__main__':
                     mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
                     psnr = 10 * np.log10(1 / mse)
                     test_psnr_avg[-1] += np.mean(psnr)
-
                     test_loss_avg[-1] += loss.item()
                     num_batches += 1
 
@@ -135,6 +135,7 @@ if __name__ == '__main__':
                 print("Saving new best model...")
                 current_best_eval_psnr = test_psnr_avg[-1]
                 torch.save(model, args.save_model_path)
+                print("Saved!")
 
             model.train()
 

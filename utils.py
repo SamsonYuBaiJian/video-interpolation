@@ -54,7 +54,7 @@ class VimeoDataset(Dataset):
 
     return sample
 
-# show middle frame with first and last frames
+
 def imshow(inp):
     """Imshow for Tensor."""
     inp = inp.numpy().transpose((1, 2, 0))
@@ -63,8 +63,9 @@ def imshow(inp):
     # inp = std * inp + mean
     inp = np.clip(inp, 0, 1)
     plt.imshow(inp)
-    plt.pause(0.001)  # pause a bit so that plots are updated
+    plt.pause(0.001)
     plt.show()
+
 
 def generate(model, dataloader, num_images, device):
     was_training = model.training
@@ -87,6 +88,7 @@ def generate(model, dataloader, num_images, device):
             break
     model.train(mode=was_training)
 
+
 def get_optical_flow(first, last):
     """
     Takes in numpy arrays.
@@ -103,6 +105,7 @@ def get_optical_flow(first, last):
 
     return bgr
 
+
 def save_optical_flow(video_dir, text_split):
     with open(text_split, 'r') as f:
         filenames = f.readlines()
@@ -118,5 +121,9 @@ def save_optical_flow(video_dir, text_split):
             continue
         frames = sorted(frames)
         if len(frames) == 3:
-            bgr = get_optical_flow(frames[0], frames[1])
+            bgr = get_optical_flow(frames[0], frames[2])
             cv2.imwrite(os.path.join('/'.join(frames[0].split('/')[:-1]),'flow.png'), bgr)
+
+
+def save_stats():
+    pass

@@ -6,6 +6,6 @@
 - [X] Add skip connections
 - [X] Add argparse
 - [] Allow saving of statistics
-- [] Add Global Average Pooling to allow for variable-size images
+- [] Add Global Average Pooling to allow for different image sizes
 - [] Add adversarial training
 - [] Add perceptual loss
