@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
             if args.max_num_images is not None:
                 print((args.max_num_images, args.batch_size))
-                if num_batches == int(args.max_num_images / args.batch_size):
+                if num_batches == int(float(args.max_num_images) / args.batch_size):
                     break
 
         train_loss_avg[-1] /= num_batches
