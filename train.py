@@ -11,15 +11,15 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--channels', default=64)
-    parser.add_argument('--latent_dims', default=512)
-    parser.add_argument('--num_epochs', default=150)
-    parser.add_argument('--lr', default=1e-4)
+    parser.add_argument('--channels', default=64, type=int)
+    parser.add_argument('--latent_dims', default=512, type=int)
+    parser.add_argument('--num_epochs', default=150, type=int)
+    parser.add_argument('--lr', default=1e-4, type=float)
     parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str)
-    parser.add_argument('--show_images_every', default=10)
-    parser.add_argument('--eval_every', default=10)
+    parser.add_argument('--show_images_every', default=10, type=int)
+    parser.add_argument('--eval_every', default=10, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt')
     args = parser.parse_args()
@@ -84,7 +84,6 @@ if __name__ == '__main__':
             num_batches += 1
 
             if args.max_num_images is not None:
-                print((args.max_num_images, args.batch_size))
                 if num_batches == int(float(args.max_num_images) / args.batch_size):
                     break
 
