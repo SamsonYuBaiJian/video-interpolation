@@ -16,7 +16,7 @@ if __name__ == '__main__':
     use_gpu = True
     show_images_every = 10
     eval_every = 10
-    max_batches = 150
+    max_num = 20000
 
     vae = VariationalAutoencoder()
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
             
             train_loss_avg[-1] += loss.item()
             num_batches += 1
-            if num_batches == max_batches:
+            if num_batches == int(max_num / batch_size):
                 break
 
         train_loss_avg[-1] /= num_batches
