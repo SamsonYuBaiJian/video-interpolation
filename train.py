@@ -47,19 +47,20 @@ if __name__ == '__main__':
     print('\nTraining...')
     for epoch in range(num_epochs):
         train_loss_avg.append(0)
-        train_psnr_avg.append(0)
+        # train_psnr_avg.append(0)
         num_batches = 0
         
         # use mini batches from trainloader
         for i in trainloader:
-            first = i['first_last_frames'][0]
-            last = i['first_last_frames'][1]
+            first = i['first_last_frames_flow'][0]
+            last = i['first_last_frames_flow'][1]
+            flow = i['first_last_frames_flow'][2]
             mid = i['middle_frame']
 
-            first, last, mid = first.to(device), last.to(device), mid.to(device)
+            first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
 
             # vae reconstruction
-            mid_recon, latent_mu, latent_logvar = vae(first, last)
+            mid_recon, latent_mu, latent_logvar = vae(first, last, flow)
             
             # reconstruction error
             loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
@@ -71,23 +72,23 @@ if __name__ == '__main__':
             # one step of the optmizer (using the gradients from backpropagation)
             optimizer.step()
 
-            vae.eval()
-            with torch.no_grad():
-                # PSNR
-                mid_recon = mid_recon.detach().to('cpu').numpy()
-                mid = mid.detach().to('cpu').numpy()
-                mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
-                psnr = 10 * np.log10(1 / mse)
-                train_psnr_avg[-1] += np.mean(psnr)
-            vae.train()
+            # vae.eval()
+            # with torch.no_grad():
+            #     # PSNR
+            #     mid_recon = mid_recon.detach().to('cpu').numpy()
+            #     mid = mid.detach().to('cpu').numpy()
+            #     mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
+            #     psnr = 10 * np.log10(1 / mse)
+            #     train_psnr_avg[-1] += np.mean(psnr)
+            # vae.train()
             
             train_loss_avg[-1] += loss.item()
             num_batches += 1
-            break
 
         train_loss_avg[-1] /= num_batches
-        train_psnr_avg[-1] /= num_batches
-        print('Epoch [%d / %d] average TRAIN reconstruction error: %f, TRAIN PSNR: %f' % (epoch+1, num_epochs, train_loss_avg[-1], train_psnr_avg[-1]))
+        print('Epoch [%d / %d] average TRAIN reconstruction error: %f' % (epoch+1, num_epochs, train_loss_avg[-1]))
+        # train_psnr_avg[-1] /= num_batches
+        # print('Epoch [%d / %d] average TRAIN reconstruction error: %f, TRAIN PSNR: %f' % (epoch+1, num_epochs, train_loss_avg[-1], train_psnr_avg[-1]))
         
         if (epoch+1) % show_images_every == 0:
             generate(vae, testset, 5, device)
@@ -101,17 +102,18 @@ if __name__ == '__main__':
             with torch.no_grad():
                 num_batches = 0
                 for i in testloader:
-                    first = i['first_last_frames'][0]
-                    last = i['first_last_frames'][1]
+                    first = i['first_last_frames_flow'][0]
+                    last = i['first_last_frames_flow'][1]
+                    flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
 
-                    first, last, mid = first.to(device), last.to(device), mid.to(device)
+                    first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
 
                     # vae reconstruction
-                    mid_recon, latent_mu, latent_logvar = vae(first, last)
+                    mid_recon, latent_mu, latent_logvar = vae(first, last, flow)
                     
                     # reconstruction error
-                    loss = torch.nn.MSE_Loss()(mid_recon, mid, latent_mu, latent_logvar)
+                    loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
 
                     # PSNR
                     mid_recon = mid_recon.detach().to('cpu').numpy()
