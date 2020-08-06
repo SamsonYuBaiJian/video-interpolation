@@ -16,6 +16,7 @@ if __name__ == '__main__':
     use_gpu = True
     show_images_every = 10
     eval_every = 10
+    max_batches = 150
 
     vae = VariationalAutoencoder()
 
@@ -84,6 +85,8 @@ if __name__ == '__main__':
             
             train_loss_avg[-1] += loss.item()
             num_batches += 1
+            if num_batches == max_batches:
+                break
 
         train_loss_avg[-1] /= num_batches
         print('Epoch [%d / %d] average TRAIN reconstruction error: %f' % (epoch+1, num_epochs, train_loss_avg[-1]))
