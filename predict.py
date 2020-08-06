@@ -33,18 +33,6 @@ if __name__ == '__main__':
     model.eval()
 
     with torch.no_grad():
-        # for i in range(0,400,50):
-        #     # latent_mu, latent_logvar = vae.encoder(first, last)
-        #     latent_mu, latent_logvar = model.encoder(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device), flow.unsqueeze(0).to(device))
-        #     # print(latent_mu.shape, latent_logvar.shape)
-        #     latent = model.latent_sample(latent_mu, latent_logvar)
-        #     tensor_list = []
-        #     for j in range(-20,21,40):
-        #         latent[:,i] = j / 10.
-        #         image_recon = model.decoder(latent)
-        #         image_recon = image_recon.squeeze(0).cpu()
-        #         tensor_list.append(image_recon)
-        #     imshow(torchvision.utils.make_grid(tensor_list))
-        img_recon = model(first, last, flow)
-        tensor_list = [first, img_recon, last]
+        img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device), flow.unsqueeze(0).to(device))
+        tensor_list = [first, img_recon.squeeze(0), last]
         imshow(torchvision.utils.make_grid(tensor_list))
