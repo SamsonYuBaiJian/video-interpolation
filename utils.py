@@ -88,11 +88,9 @@ def generate(model, dataloader, num_images, device):
     model.train(mode=was_training)
 
 def get_optical_flow(first, last):
-    first = cv2.imread(first)
     hsv = np.zeros_like(first)
     first = cv2.cvtColor(first, cv2.COLOR_BGR2GRAY)
     hsv[...,1] = 255
-    last = cv2.imread(last)
     last = cv2.cvtColor(last, cv2.COLOR_BGR2GRAY)
     flow = cv2.calcOpticalFlowFarneback(first, last, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
