@@ -1,32 +1,36 @@
-from model import VariationalAutoencoder, vae_loss
+# from model import VariationalAutoencoder, vae_loss
+from model import Autoencoder
 import torch
 from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
-from utils import VimeoDataset
+from utils import VimeoDataset, generate
 import numpy as np
-from utils import generate
 import matplotlib.pyplot as plt
+import argparse
 
 
 if __name__ == '__main__':
-    # parameters
-    num_epochs = 150
-    batch_size = 64
-    learning_rate = 1e-4
-    use_gpu = True
-    show_images_every = 10
-    eval_every = 10
-    max_num = 20000
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--channels', default=64)
+    parser.add_argument('--latent_dims', default=512)
+    parser.add_argument('--num_epochs', default=150)
+    parser.add_argument('--lr', default=1e-4)
+    parser.add_argument('--use_gpu', default=True)
+    parser.add_argument('--batch_size', default=64)
+    parser.add_argument('--vimeo_90k_path', type=str)
+    parser.add_argument('--show_images_every', default=10)
+    parser.add_argument('--eval_every', default=10)
+    parser.add_argument('--max_num_images', default=None)
+    parser.add_argument('--save_model_path', default='./model.pt')
+    args = parser.parse_args()
 
-    vae = VariationalAutoencoder()
-
-    device = torch.device("cuda:0" if use_gpu and torch.cuda.is_available() else "cpu")
-    vae = vae.to(device)
-
-    optimizer = torch.optim.Adam(params=vae.parameters(), lr=learning_rate, weight_decay=1e-5)
-
-    # set to training mode
-    vae.train()
+    model = Autoencoder(args.channels, args.latent_dims)
+    device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr, weight_decay=1e-5)
+    criterion = torch.nn.MSELoss()
+    criterion.to(device)
+    model.train()
 
     train_loss_avg = []
     train_psnr_avg = []
@@ -34,21 +38,17 @@ if __name__ == '__main__':
     test_psnr_avg = []
 
     print('Building dataloaders...')
-
     trainset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_trainlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
     testset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_testlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
-
-    trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=0)
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=0)
-
+    trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+    testloader = DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=0)
     print('Dataloaders successfully built!')
 
     current_best_eval_psnr = 0
-
     print('\nTraining...')
-    for epoch in range(num_epochs):
+    for epoch in range(args.num_epochs):
         train_loss_avg.append(0)
-        # train_psnr_avg.append(0)
+        train_psnr_avg.append(0)
         num_batches = 0
         
         # use mini batches from trainloader
@@ -60,48 +60,47 @@ if __name__ == '__main__':
 
             first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
 
-            # vae reconstruction
-            mid_recon, latent_mu, latent_logvar = vae(first, last, flow)
-            
-            # reconstruction error
-            loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
+            # mid_recon, latent_mu, latent_logvar = model(first, last, flow)
+            # loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
+            mid_recon = model(first, last, flow)
+            loss = criterion(mid, mid_recon)
             
             # backpropagation
             optimizer.zero_grad()
             loss.backward()
-            
-            # one step of the optmizer (using the gradients from backpropagation)
             optimizer.step()
 
-            # vae.eval()
-            # with torch.no_grad():
-            #     # PSNR
-            #     mid_recon = mid_recon.detach().to('cpu').numpy()
-            #     mid = mid.detach().to('cpu').numpy()
-            #     mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
-            #     psnr = 10 * np.log10(1 / mse)
-            #     train_psnr_avg[-1] += np.mean(psnr)
-            # vae.train()
+            model.eval()
+            with torch.no_grad():
+                # PSNR
+                mid_recon = mid_recon.detach().to('cpu').numpy()
+                mid = mid.detach().to('cpu').numpy()
+                mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
+                psnr = 10 * np.log10(1 / mse)
+                train_psnr_avg[-1] += np.mean(psnr)
+            model.train()
             
             train_loss_avg[-1] += loss.item()
             num_batches += 1
-            if num_batches == int(max_num / batch_size):
-                break
+
+            if args.max_num_images is not None:
+                if num_batches == int(args.max_num_images / args.batch_size):
+                    break
 
         train_loss_avg[-1] /= num_batches
-        print('Epoch [%d / %d] average TRAIN reconstruction error: %f' % (epoch+1, num_epochs, train_loss_avg[-1]))
-        # train_psnr_avg[-1] /= num_batches
+        train_psnr_avg[-1] /= num_batches
+        print('Train error: %f, Train PSNR: %f' % (train_loss_avg[-1], train_psnr_avg[-1]))
         # print('Epoch [%d / %d] average TRAIN reconstruction error: %f, TRAIN PSNR: %f' % (epoch+1, num_epochs, train_loss_avg[-1], train_psnr_avg[-1]))
         
-        if (epoch+1) % show_images_every == 0:
-            generate(vae, testset, 5, device)
+        # if (epoch+1) % args.show_images_every == 0:
+        #     generate(model, testset, 5, device)
 
-        if (epoch+1) % eval_every == 0:
+        if (epoch+1) % args.eval_every == 0:
             test_loss_avg.append(0)
             test_psnr_avg.append(0)
 
             print('Evaluating...')
-            vae.eval()
+            model.eval()
             with torch.no_grad():
                 num_batches = 0
                 for i in testloader:
@@ -112,11 +111,10 @@ if __name__ == '__main__':
 
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
 
-                    # vae reconstruction
-                    mid_recon, latent_mu, latent_logvar = vae(first, last, flow)
-                    
-                    # reconstruction error
-                    loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
+                    # mid_recon, latent_mu, latent_logvar = vae(first, last, flow)
+                    # loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
+                    mid_recon = model(first, last, flow)
+                    loss = criterion(mid, mid_recon)
 
                     # PSNR
                     mid_recon = mid_recon.detach().to('cpu').numpy()
@@ -130,14 +128,15 @@ if __name__ == '__main__':
 
                 test_loss_avg[-1] /= num_batches
                 test_psnr_avg[-1] /= num_batches
-                print('Average TEST reconstruction error: %f, TEST PSNR: %f' % (test_loss_avg[-1], test_psnr_avg[-1]))
+                # print('Average TEST reconstruction error: %f, TEST PSNR: %f' % (test_loss_avg[-1], test_psnr_avg[-1]))
+                print('Test error: %f, Test PSNR: %f' % (test_loss_avg[-1], test_psnr_avg[-1]))
 
             if test_psnr_avg[-1] > current_best_eval_psnr:
                 print("Saving new best model...")
                 current_best_eval_psnr = test_psnr_avg[-1]
-                torch.save(vae, './model.pt')
+                torch.save(model, args.save_model_path)
 
-            vae.train()
+            model.train()
 
 
     # show how loss evolves during training

@@ -88,6 +88,9 @@ def generate(model, dataloader, num_images, device):
     model.train(mode=was_training)
 
 def get_optical_flow(first, last):
+    """
+    Takes in numpy arrays.
+    """
     hsv = np.zeros_like(first)
     first = cv2.cvtColor(first, cv2.COLOR_BGR2GRAY)
     hsv[...,1] = 255
