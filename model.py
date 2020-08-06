@@ -18,8 +18,8 @@ class Encoder(nn.Module):
         self.fc_mu = nn.Linear(in_features=c*3*16*28, out_features=latent_dims)
         self.fc_logvar = nn.Linear(in_features=c*3*16*28, out_features=latent_dims)
             
-    def forward(self, first, last):
-        x = torch.cat([first, last], 1)
+    def forward(self, first, last, flow):
+        x = torch.cat([first, last, flow], 1)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
@@ -38,7 +38,7 @@ class Decoder(nn.Module):
         self.conv4 = nn.ConvTranspose2d(in_channels=c*3, out_channels=c*2, kernel_size=4, stride=2, padding=1)
         self.conv3 = nn.ConvTranspose2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
         self.conv2 = nn.ConvTranspose2d(in_channels=c*2, out_channels=c, kernel_size=4, stride=2, padding=1)
-        self.conv1 = nn.ConvTranspose2d(in_channels=c*2, out_channels=3, kernel_size=4, stride=2, padding=1)
+        self.conv1 = nn.ConvTranspose2d(in_channels=c, out_channels=3, kernel_size=4, stride=2, padding=1)
             
     def forward(self, x):
         x = self.fc(x)
@@ -55,14 +55,14 @@ class VariationalAutoencoder(nn.Module):
         self.encoder = Encoder()
         self.decoder = Decoder()
     
-    def forward(self, first, last):
+    def forward(self, first, last, flow):
         # remember our encoder output consists of x_mu and x_logvar
-        latent_mu, latent_logvar = self.encoder(first, last)
+        latent_mu, latent_logvar = self.encoder(first, last, flow)
         # we sample from the distributions defined by mu and logvar
         # (function latent_sample defined below)
         latent = self.latent_sample(latent_mu, latent_logvar)
         x_recon = self.decoder(latent)
-        return x_recon, latent
+        return x_recon, latent_mu, latent_logvar
     
     def latent_sample(self, mu, logvar):
         if self.training:
