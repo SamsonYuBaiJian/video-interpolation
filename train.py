@@ -38,7 +38,7 @@ if __name__ == '__main__':
     }
 
     # instantiate setup
-    device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
     autoencoder = Autoencoder(args.channels)
     autoencoder = autoencoder.to(device)
     discriminator = Discriminator(args.channels, args.latent_dims)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
             g_loss.backward()
             g_optimizer.step()
 
-            # TODO: discriminator training
+            # discriminator training
             d_optimizer.zero_grad()
             d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
             d_loss.backward()
