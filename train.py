@@ -13,7 +13,6 @@ import os
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--channels', default=64, type=int)
-    parser.add_argument('--latent_dims', default=512, type=int)
     parser.add_argument('--num_epochs', default=150, type=int)
     parser.add_argument('--lr', default=1e-4, type=float)
     parser.add_argument('--use_gpu', default=True)
@@ -27,10 +26,8 @@ if __name__ == '__main__':
 
     # process information to save statistics
     exp_time = datetime.now().strftime("date%d%m%Ytime%H%M%S")
-    print(exp_time)
     hyperparams = {
         'channels': args.channels,
-        'latent_dims': args.latent_dims,
         'num_epochs': args.num_epochs,
         'lr': args.lr,
         'batch_size': args.batch_size,
@@ -40,7 +37,7 @@ if __name__ == '__main__':
 
     # instantiate setup
     device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
-    autoencoder = Autoencoder(args.channels, args.latent_dims)
+    autoencoder = Autoencoder(args.channels)
     autoencoder = autoencoder.to(device)
     vgg16_bn = Vgg16_bn()
     vgg16_bn = vgg16_bn.to(device)
