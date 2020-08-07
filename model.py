@@ -53,7 +53,7 @@ class Autoencoder(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, c):
+    def __init__(self, c, latent_dims):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
@@ -64,8 +64,8 @@ class Discriminator(nn.Module):
             nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
         )
-        self.fc1 = nn.Linear(2*c*32*56, 512)
-        self.fc2 = nn.Linear(512, 1)
+        self.fc1 = nn.Linear(2*c*32*56, latent_dims)
+        self.fc2 = nn.Linear(latent_dims, 1)
         self.sigmoid = nn.Sigmoid()
 
 

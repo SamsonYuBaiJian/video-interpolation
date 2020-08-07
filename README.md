@@ -10,5 +10,5 @@
 - [ ] Different image sizes
 - [X] Saving statistics
 - [X] Plotting statistics
-- [ ] Adversarial training
+- [X] Adversarial training
 - [ ] Perceptual loss

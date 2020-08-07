@@ -22,6 +22,8 @@ if __name__ == '__main__':
     parser.add_argument('--eval_every', default=10, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
+    parser.add_argument('--latent_dims', default=512, type=int)
+    parser.add_argument('--weight_decay', default=1e-5, type=float)
     args = parser.parse_args()
 
     # process information to save statistics
@@ -39,12 +41,14 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
     autoencoder = Autoencoder(args.channels)
     autoencoder = autoencoder.to(device)
-    discriminator = Discriminator(args.channels)
+    discriminator = Discriminator(args.channels, args.latent_dims)
     discriminator = discriminator.to(device)
-    g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=1e-5)
-    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, weight_decay=1e-5)
-    criterion = torch.nn.MSELoss()
-    criterion.to(device)
+    g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    mse_loss = torch.nn.MSELoss()
+    mse_loss.to(device)
+    bce_loss = torch.nn.BCELoss()
+    bce_loss.to(device)
 
     # to store evaluation metrics
     train_loss = []
@@ -78,9 +82,10 @@ if __name__ == '__main__':
     for epoch in range(args.num_epochs):
         num_batches = 0
         train_psnr_epoch = 0
-        train_loss_epoch = 0
+        train_loss_epoch = [0, 0]
         
-        # use mini batches from trainloader
+        autoencoder.train()
+        discriminator.train()
         for i in trainloader:
             # load data
             first = i['first_last_frames_flow'][0]
@@ -88,44 +93,53 @@ if __name__ == '__main__':
             flow = i['first_last_frames_flow'][2]
             mid = i['middle_frame']
             first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
+            valid = torch.ones(mid_recon.shape[0], 1).to(device)
+            fake = torch.zeros(mid_recon.shape[0], 1).to(device)
 
             # autoencoder training
-            mid_recon = autoencoder(first, last, flow)
-            loss = criterion(mid, mid_recon)
             g_optimizer.zero_grad()
-            loss.backward()
+            mid_recon = autoencoder(first, last, flow)
+            g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+            g_loss.backward()
             g_optimizer.step()
 
             # TODO: discriminator training
+            d_optimizer.zero_grad()
+            d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
+            d_loss.backward()
+            d_optimizer.step()
 
             # store stats
             train_psnr_epoch += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())            
-            train_loss_epoch += loss.item()
+            train_loss_epoch[0] = g_loss.item()
+            train_loss_epoch[1] = d_loss.item()
             num_batches += 1
 
             if args.max_num_images is not None:
-                # print(np.ceil(float(args.max_num_images) / args.batch_size), num_batches)
                 if num_batches == np.ceil(float(args.max_num_images) / args.batch_size):
                     break
 
         train_psnr_epoch /= num_batches
-        train_loss_epoch /= num_batches
-        print('Epoch [%d / %d] Train error: %f, Train PSNR: %f' % (epoch+1, args.num_epochs, train_loss_epoch, train_psnr_epoch))
+        train_loss_epoch[0] /= num_batches
+        train_loss_epoch[1] /= num_batches
+        print('Epoch [{} / {}] Train error: {}, Train PSNR: {}'.format(epoch+1, args.num_epochs, train_loss_epoch, train_psnr_epoch))
 
-        # for evaluation, check test dataset, save best model and save statistics
+        # for evaluation, save best model and statistics
         if epoch % args.eval_every == 0:
-            train_loss.append(0)
+            train_loss.append([0,0])
             train_psnr.append(0)
-            val_loss.append(0)
+            val_loss.append([0,0])
             val_psnr.append(0)
-            test_loss.append(0)
+            test_loss.append([0,0])
             test_psnr.append(0)
-            train_loss[-1] += train_loss_epoch
-            train_psnr[-1] += train_psnr_epoch
+            train_loss[-1] = train_loss_epoch
+            train_psnr[-1] = train_psnr_epoch
+
+            autoencoder.eval()
+            discriminator.eval()
 
             # check val dataset
             print('Evaluating...')
-            autoencoder.eval()
             with torch.no_grad():
                 num_batches = 0
                 for i in valloader:
@@ -134,18 +148,22 @@ if __name__ == '__main__':
                     flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
+                    valid = torch.ones(mid_recon.shape[0], 1).to(device)
+                    fake = torch.zeros(mid_recon.shape[0], 1).to(device)
 
                     mid_recon = autoencoder(first, last, flow)
-                    loss = criterion(mid, mid_recon)
+                    g_loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+                    d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
 
                     # store stats
                     val_psnr[-1] += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
-                    val_loss[-1] += loss.item()
+                    val_loss[-1][0] += g_loss.item()
+                    val_loss[-1][1] += d_loss.item()
                     num_batches += 1
 
                 val_loss[-1] /= num_batches
                 val_psnr[-1] /= num_batches
-                print('Val error: %f, Val PSNR: %f' % (val_loss[-1], val_psnr[-1]))
+                print('Val error: {}, Val PSNR: {}'.format(val_loss[-1], val_psnr[-1]))
 
                 # save best model
                 if val_psnr[-1] > current_best_val_psnr:
@@ -162,18 +180,22 @@ if __name__ == '__main__':
                     flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
+                    valid = torch.ones(mid_recon.shape[0], 1).to(device)
+                    fake = torch.zeros(mid_recon.shape[0], 1).to(device)
 
                     mid_recon = autoencoder(first, last, flow)
-                    loss = criterion(mid, mid_recon)
+                    g_loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+                    d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
 
                     # store stats
                     test_psnr[-1] += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
-                    test_loss[-1] += loss.item()
+                    test_loss[-1][0] += g_loss.item()
+                    test_loss[-1][1] += d_loss.item()
                     num_batches += 1
 
                 test_loss[-1] /= num_batches
                 test_psnr[-1] /= num_batches
-                print('Test error: %f, Test PSNR: %f' % (test_loss[-1], test_psnr[-1]))
+                print('Test error: {}, Test PSNR: {}'.format(test_loss[-1], test_psnr[-1]))
 
             # save statistics
             stats = {
@@ -186,5 +208,3 @@ if __name__ == '__main__':
             }
             save_stats(args.save_stats_path, exp_time, hyperparams, stats)
             print("Saved stats!")
-
-            autoencoder.train()
