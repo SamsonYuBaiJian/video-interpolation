@@ -40,7 +40,7 @@ if __name__ == '__main__':
     }
 
     # instantiate setup
-    device = torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
     autoencoder = Autoencoder(args.channels)
     # autoencoder = torch.nn.DataParallel(autoencoder, device_ids=[0,2,3])
     autoencoder = autoencoder.to(device)
@@ -114,7 +114,7 @@ if __name__ == '__main__':
             d_optimizer.step()
 
             # store stats
-            train_psnr_epoch += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())            
+            # train_psnr_epoch += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())            
             train_loss_epoch[0] = g_loss.item()
             train_loss_epoch[1] = d_loss.item()
             num_batches += 1
@@ -193,7 +193,7 @@ if __name__ == '__main__':
                     d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
 
                     # store stats
-                    test_psnr[-1] += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
+                    # test_psnr[-1] += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
                     test_loss[-1][0] += g_loss.item()
                     test_loss[-1][1] += d_loss.item()
                     num_batches += 1
