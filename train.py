@@ -69,6 +69,8 @@ if __name__ == '__main__':
     print('\nTraining...')
     for epoch in range(args.num_epochs):
         num_batches = 0
+        train_psnr_epoch = 0
+        train_loss_epoch = 0
         
         # use mini batches from trainloader
         for i in trainloader:
@@ -94,8 +96,8 @@ if __name__ == '__main__':
             optimizer.step()
 
             # store stats
-            train_psnr_epoch = get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())            
-            train_loss_epoch = loss.item()
+            train_psnr_epoch += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())            
+            train_loss_epoch += loss.item()
             num_batches += 1
 
             if args.max_num_images is not None:
