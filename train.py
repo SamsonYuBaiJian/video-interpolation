@@ -89,18 +89,20 @@ if __name__ == '__main__':
             valid = torch.ones(mid.shape[0], 1).to(device)
             fake = torch.zeros(mid.shape[0], 1).to(device)
 
-            # autoencoder training
-            g_optimizer.zero_grad()
+            # autoencoder prediction
             mid_recon = autoencoder(first, last, flow)
-            g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-            g_loss.backward()
-            g_optimizer.step()
 
             # discriminator training
             d_optimizer.zero_grad()
             d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
             d_loss.backward(retain_graph=True)
             d_optimizer.step()
+
+            # autoencoder training
+            g_optimizer.zero_grad()
+            g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+            g_loss.backward()
+            g_optimizer.step()
 
             # store stats       
             train_loss_epoch[0] = g_loss.item()
