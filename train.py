@@ -26,7 +26,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # process information to save statistics
-    exp_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    exp_time = datetime.now().strftime("date%d%m%Ytime%H%M%S")
+    print(exp_time)
     hyperparams = {
         'channels': args.channels,
         'latent_dims': args.latent_dims,
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     train_psnr = []
     test_loss = []
     test_psnr = []
-    current_best_eval_psnr = 0
+    current_best_eval_psnr = float('-inf')
 
     # build dataloaders
     print('Building dataloaders...')
@@ -110,7 +111,7 @@ if __name__ == '__main__':
         print('Train error: %f, Train PSNR: %f' % (train_loss_epoch, train_psnr_epoch))
 
         # for evaluation, check test dataset, save best model and save statistics
-        if (epoch+1) % args.eval_every == 0:
+        if epoch % args.eval_every == 0:
             train_loss.append(0)
             train_psnr.append(0)
             test_loss.append(0)
@@ -144,6 +145,9 @@ if __name__ == '__main__':
                     test_psnr[-1] += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
                     test_loss[-1] += loss.item()
                     num_batches += 1
+                    
+                    # TODO: REMOVE
+                    break
 
                 test_loss[-1] /= num_batches
                 test_psnr[-1] /= num_batches
@@ -151,10 +155,9 @@ if __name__ == '__main__':
 
             # save best model
             if test_psnr[-1] > current_best_eval_psnr:
-                print("Saving new best model...")
                 current_best_eval_psnr = test_psnr[-1]
                 torch.save(autoencoder, args.save_model_path)
-                print("Saved!")
+                print("Saved new best model!")
 
             # save statistics
             stats = {
@@ -164,5 +167,6 @@ if __name__ == '__main__':
                 'test_psnr': test_psnr
             }
             save_stats(args.save_stats_path, exp_time, hyperparams, stats)
+            print("Saved stats!")
 
             autoencoder.train()

@@ -142,9 +142,9 @@ def plot_stats(exp_dir):
     test_loss = stats['test_loss']
     test_psnr = stats['test_psnr']
     length = len(train_loss)
-    epochs = [epoch_interval * (i+1) for i in range(length)]
+    epochs = [epoch_interval * i for i in range(length)]
 
-    _, axes = plt.subplots((2,2))
+    _, axes = plt.subplots(2,2)
     axes[0,0].set_title('Train Loss')
     axes[0,1].set_title('Train PSNR')
     axes[1,0].set_title('Test Loss')
