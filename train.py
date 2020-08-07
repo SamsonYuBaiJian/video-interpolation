@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
             # discriminator training
             d_optimizer.zero_grad()
-            d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
+            d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
             d_loss.backward()
             d_optimizer.step()
 
@@ -113,56 +113,56 @@ if __name__ == '__main__':
 
         train_loss_epoch[0] /= num_batches
         train_loss_epoch[1] /= num_batches
-        print('Epoch [{} / {}] Train g_error: {}, d_error: {}'.format(epoch+1, args.num_epochs, train_loss_epoch[0], train_loss_epoch[1]))
+        print('Epoch [{} / {}] Train g_loss: {}, d_loss: {}'.format(epoch+1, args.num_epochs, train_loss_epoch[0], train_loss_epoch[1]))
 
         # for evaluation, save best model and statistics
-        if epoch % args.eval_every == 0:
-            train_loss.append([0,0])
-            val_loss.append([0,0])
-            val_psnr = 0
-            train_loss[-1] = train_loss_epoch
+        # if epoch % args.eval_every == 0:
+        #     train_loss.append([0,0])
+        #     val_loss.append([0,0])
+        #     val_psnr = 0
+        #     train_loss[-1] = train_loss_epoch
 
-            autoencoder.eval()
-            discriminator.eval()
+        #     autoencoder.eval()
+        #     discriminator.eval()
 
-            # check val dataset
-            print('Evaluating...')
-            with torch.no_grad():
-                num_batches = 0
-                for i in valloader:
-                    first = i['first_last_frames_flow'][0]
-                    last = i['first_last_frames_flow'][1]
-                    flow = i['first_last_frames_flow'][2]
-                    mid = i['middle_frame']
-                    first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-                    valid = torch.ones(mid.shape[0], 1).to(device)
-                    fake = torch.zeros(mid.shape[0], 1).to(device)
+        #     # check val dataset
+        #     print('Evaluating...')
+        #     with torch.no_grad():
+        #         num_batches = 0
+        #         for i in valloader:
+        #             first = i['first_last_frames_flow'][0]
+        #             last = i['first_last_frames_flow'][1]
+        #             flow = i['first_last_frames_flow'][2]
+        #             mid = i['middle_frame']
+        #             first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
+        #             valid = torch.ones(mid.shape[0], 1).to(device)
+        #             fake = torch.zeros(mid.shape[0], 1).to(device)
 
-                    mid_recon = autoencoder(first, last, flow)
-                    g_loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-                    d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
+        #             mid_recon = autoencoder(first, last, flow)
+        #             g_loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+        #             d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
 
-                    # store stats
-                    val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
-                    val_loss[-1][0] += g_loss.item()
-                    val_loss[-1][1] += d_loss.item()
-                    num_batches += 1
+        #             # store stats
+        #             val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
+        #             val_loss[-1][0] += g_loss.item()
+        #             val_loss[-1][1] += d_loss.item()
+        #             num_batches += 1
 
-                val_loss[-1][0] /= num_batches
-                val_loss[-1][1] /= num_batches
-                val_psnr /= num_batches
-                print('Val g_error: {}, d_error: {}'.format(val_loss[-1][0], val_loss[-1][1]))
+        #         val_loss[-1][0] /= num_batches
+        #         val_loss[-1][1] /= num_batches
+        #         val_psnr /= num_batches
+        #         print('Val g_loss: {}, d_loss: {}'.format(val_loss[-1][0], val_loss[-1][1]))
 
-                # save best model
-                if val_psnr > current_best_val_psnr:
-                    current_best_val_psnr = val_psnr
-                    torch.save(autoencoder, args.save_model_path)
-                    print("Saved new best model with val PSNR: {}!".format(val_psnr))
+        #         # save best model
+        #         if val_psnr > current_best_val_psnr:
+        #             current_best_val_psnr = val_psnr
+        #             torch.save(autoencoder, args.save_model_path)
+        #             print("Saved new best model with val PSNR: {}!".format(val_psnr))
 
-            # save statistics
-            stats = {
-                'train_loss': train_loss,
-                'val_loss': val_loss,
-            }
-            save_stats(args.save_stats_path, exp_time, hyperparams, stats)
-            print("Saved stats!")
+        #     # save statistics
+        #     stats = {
+        #         'train_loss': train_loss,
+        #         'val_loss': val_loss,
+        #     }
+        #     save_stats(args.save_stats_path, exp_time, hyperparams, stats)
+        #     print("Saved stats!")
