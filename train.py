@@ -34,7 +34,9 @@ if __name__ == '__main__':
         'lr': args.lr,
         'batch_size': args.batch_size,
         'eval_every': args.eval_every,
-        'max_num_images': args.max_num_images
+        'max_num_images': args.max_num_images,
+        'latent_dims': args.latent_dims,
+        'weight_decay': args.weight_decay
     }
 
     # instantiate setup
