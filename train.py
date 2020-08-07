@@ -42,10 +42,10 @@ if __name__ == '__main__':
     # instantiate setup
     device = torch.device("cuda" if args.use_gpu and torch.cuda.is_available() else "cpu")
     autoencoder = Autoencoder(args.channels)
-    autoencoder = torch.nn.DataParallel(autoencoder, device_ids=[0,2,3])
+    # autoencoder = torch.nn.DataParallel(autoencoder, device_ids=[0,2,3])
     autoencoder = autoencoder.to(device)
     discriminator = Discriminator(args.channels, args.latent_dims)
-    discriminator = torch.nn.DataParallel(discriminator, device_ids=[0,2,3])
+    # discriminator = torch.nn.DataParallel(discriminator, device_ids=[0,2,3])
     discriminator = discriminator.to(device)
     g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, weight_decay=args.weight_decay)
