@@ -93,8 +93,8 @@ if __name__ == '__main__':
             flow = i['first_last_frames_flow'][2]
             mid = i['middle_frame']
             first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-            valid = torch.ones(mid_recon.shape[0], 1).to(device)
-            fake = torch.zeros(mid_recon.shape[0], 1).to(device)
+            valid = torch.ones(mid.shape[0], 1).to(device)
+            fake = torch.zeros(mid.shape[0], 1).to(device)
 
             # autoencoder training
             g_optimizer.zero_grad()
@@ -148,8 +148,8 @@ if __name__ == '__main__':
                     flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-                    valid = torch.ones(mid_recon.shape[0], 1).to(device)
-                    fake = torch.zeros(mid_recon.shape[0], 1).to(device)
+                    valid = torch.ones(mid.shape[0], 1).to(device)
+                    fake = torch.zeros(mid.shape[0], 1).to(device)
 
                     mid_recon = autoencoder(first, last, flow)
                     g_loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
@@ -180,8 +180,8 @@ if __name__ == '__main__':
                     flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-                    valid = torch.ones(mid_recon.shape[0], 1).to(device)
-                    fake = torch.zeros(mid_recon.shape[0], 1).to(device)
+                    valid = torch.ones(mid.shape[0], 1).to(device)
+                    fake = torch.zeros(mid.shape[0], 1).to(device)
 
                     mid_recon = autoencoder(first, last, flow)
                     g_loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
