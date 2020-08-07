@@ -163,7 +163,8 @@ if __name__ == '__main__':
                     val_loss[-1][1] += d_loss.item()
                     num_batches += 1
 
-                val_loss[-1] /= num_batches
+                val_loss[-1][0] /= num_batches
+                val_loss[-1][1] /= num_batches
                 val_psnr[-1] /= num_batches
                 print('Val error: {}, Val PSNR: {}'.format(val_loss[-1], val_psnr[-1]))
 
@@ -195,7 +196,8 @@ if __name__ == '__main__':
                     test_loss[-1][1] += d_loss.item()
                     num_batches += 1
 
-                test_loss[-1] /= num_batches
+                test_loss[-1][0] /= num_batches
+                test_loss[-1][1] /= num_batches
                 test_psnr[-1] /= num_batches
                 print('Test error: {}, Test PSNR: {}'.format(test_loss[-1], test_psnr[-1]))
 
