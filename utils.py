@@ -1,6 +1,7 @@
 import torch
 import torchvision
 from torch.utils.data import DataLoader, Dataset
+import torchvision.transforms as transforms
 import PIL
 import os
 import numpy as np
@@ -19,7 +20,12 @@ class VimeoDataset(Dataset):
         """
         self.video_dir = video_dir
         self.text_split = text_split
-        self.transform = transform
+        if transform is None:
+            self.transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+            ])
         self.middle_frame = []
         self.first_last_frames_flow = []
 
@@ -66,28 +72,6 @@ def imshow(inp):
     plt.imshow(inp)
     plt.pause(0.001)
     plt.show()
-
-
-# def generate(model, dataloader, num_images, device):
-#     was_training = model.training
-#     model.eval()
-#     cnt = 0
-#     for i in dataloader:
-#         first = i['first_last_frames_flow'][0].unsqueeze(0).to(device)
-#         last = i['first_last_frames_flow'][1].unsqueeze(0).to(device)
-#         flow = i['first_last_frames_flow'][2].unsqueeze(0).to(device)
-#         mid = i['middle_frame']
-#         with torch.no_grad():
-#             recon = model(first, last, flow)
-#         recon = recon[0].squeeze(0).to('cpu')
-#         first = first.squeeze(0).to('cpu')
-#         last = last.squeeze(0).to('cpu')
-#         out = torchvision.utils.make_grid([first, last, mid, recon])
-#         imshow(out)
-#         cnt += 1
-#         if cnt == num_images:
-#             break
-#     model.train(mode=was_training)
 
 
 def get_optical_flow(first, last):
@@ -150,7 +134,7 @@ def plot_stats(exp_dir):
     
     print("Experiment settings:\n{}".format(hyperparams))
     
-    # TODO: Plot stats
+    # Plot stats
     epoch_interval = hyperparams['eval_every']
 
     train_loss = stats['train_loss']
@@ -172,3 +156,13 @@ def plot_stats(exp_dir):
     axes[1,1].plot(epochs, test_psnr)
 
     plt.show()
+
+
+def get_psnr(mid, mid_recon):
+    """
+    Returns PSNR value for two NumPy arrays.
+    """
+    with torch.no_grad():
+        mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
+        psnr = 10 * np.log10(1 / mse)
+        return np.mean(psnr)

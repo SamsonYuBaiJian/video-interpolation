@@ -9,4 +9,4 @@
 - [X] Saving statistics
 - [X] Plotting statistics
 - [ ] Adversarial training
-- [ ] Perceptual loss with VGG-16
+- [X] Perceptual loss with VGG-16

@@ -12,9 +12,9 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--save_model_path', default='./model.pt')
-    parser.add_argument('--first_image')
-    parser.add_argument('--last_image')
+    parser.add_argument('--save_model_path', required=True)
+    parser.add_argument('--first_image', required=True)
+    parser.add_argument('--last_image', required=True)
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -24,9 +24,14 @@ if __name__ == '__main__':
     first = PIL.Image.open(args.first_image)
     last = PIL.Image.open(args.last_image)
     flow = PIL.Image.fromarray(flow)
-    first = transforms.Compose([transforms.ToTensor()])(first)
-    last = transforms.Compose([transforms.ToTensor()])(last)
-    flow = transforms.Compose([transforms.ToTensor()])(flow)
+    transforms = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225])
+    ])
+    first = transforms(first)
+    last = transforms(last)
+    flow = transforms(flow)
 
     model.eval()
 

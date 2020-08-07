@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.models as models
 
 
 class Encoder(nn.Module):
@@ -49,6 +50,27 @@ class Autoencoder(nn.Module):
         latent, econv1, econv2, econv3 = self.encoder(first, last, flow)
         x_recon = self.decoder(latent, econv1, econv2, econv3)
         return x_recon
+
+
+class Vgg16_bn(torch.nn.Module):
+    def __init__(self):
+        super(Vgg16_bn, self).__init__()
+        vgg16_bn = models.vgg16_bn(pretrained=True)
+        for param in vgg16_bn.parameters():
+            param.requires_grad = False
+        # for name, mod in vgg16_bn.named_modules():
+        #     print(name, mod)
+        features = list(vgg16_bn.features)[:23]
+        self.features = nn.ModuleList(features).eval() 
+        
+    def forward(self, x):
+        results = []
+        for ii, model in enumerate(self.features):
+            x = model(x)
+            # get ReLU layers before each MaxPool2d
+            if ii in {5,12}:
+                results.append(x)
+        return results
 
 
 class Discriminator(nn.Module):
