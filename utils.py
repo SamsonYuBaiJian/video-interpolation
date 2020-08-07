@@ -22,9 +22,7 @@ class VimeoDataset(Dataset):
         self.text_split = text_split
         if transform is None:
             self.transform = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+                transforms.ToTensor()
             ])
         self.middle_frame = []
         self.first_last_frames_flow = []
@@ -65,9 +63,11 @@ class VimeoDataset(Dataset):
 def imshow(inp):
     """Imshow for Tensor."""
     inp = inp.numpy().transpose((1, 2, 0))
-    # mean = np.array(means)
-    # std = np.array(stds)
-    # inp = std * inp + mean
+    means = [0.485, 0.456, 0.406]
+    stds = [0.229, 0.224, 0.225]
+    mean = np.array(means)
+    std = np.array(stds)
+    inp = std * inp + mean
     inp = np.clip(inp, 0, 1)
     plt.imshow(inp)
     plt.pause(0.001)
@@ -139,21 +139,22 @@ def plot_stats(exp_dir):
 
     train_loss = stats['train_loss']
     train_psnr = stats['train_psnr']
+    val_loss = stats['test_loss']
+    val_psnr = stats['test_psnr']
     test_loss = stats['test_loss']
     test_psnr = stats['test_psnr']
     length = len(train_loss)
     epochs = [epoch_interval * i for i in range(length)]
 
-    _, axes = plt.subplots(2,2)
-    axes[0,0].set_title('Train Loss')
-    axes[0,1].set_title('Train PSNR')
-    axes[1,0].set_title('Test Loss')
-    axes[1,1].set_title('Test PSNR')
-
-    axes[0,0].plot(epochs, train_loss)
-    axes[0,1].plot(epochs, train_psnr)
-    axes[1,0].plot(epochs, test_loss)
-    axes[1,1].plot(epochs, test_psnr)
+    _, axes = plt.subplots(1, 2)
+    axes[0,0].set_title('Loss vs Epoch')
+    axes[0,1].set_title('PSNR vs Epoch')
+    axes[0,0].plot(epochs, train_loss, label='Train loss')
+    axes[0,0].plot(epochs, val_loss, label='Val loss')
+    axes[0,0].plot(epochs, test_loss, label='Test loss')
+    axes[0,1].plot(epochs, train_psnr, label='Train PSNR')
+    axes[0,1].plot(epochs, val_psnr, label='Val PSNR')
+    axes[0,1].plot(epochs, test_psnr, label='Test PSNR')
 
     plt.show()
 
@@ -163,6 +164,7 @@ def get_psnr(mid, mid_recon):
     Returns PSNR value for two NumPy arrays.
     """
     with torch.no_grad():
+        # mean over batches
         mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
         psnr = 10 * np.log10(1 / mse)
         return np.mean(psnr)

@@ -1,4 +1,4 @@
-from model import Autoencoder, Vgg16_bn
+from model import Autoencoder, Discriminator
 import torch
 from torch.utils.data import DataLoader, Dataset
 from utils import VimeoDataset, save_stats, get_psnr
@@ -39,23 +39,25 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
     autoencoder = Autoencoder(args.channels)
     autoencoder = autoencoder.to(device)
-    vgg16_bn = Vgg16_bn()
-    vgg16_bn = vgg16_bn.to(device)
-    optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=1e-5)
+    discriminator = Discriminator(args.channels)
+    discriminator = discriminator.to(device)
+    g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=1e-5)
+    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, weight_decay=1e-5)
     criterion = torch.nn.MSELoss()
     criterion.to(device)
-    autoencoder.train()
-    vgg16_bn.eval()
 
     # to store evaluation metrics
     train_loss = []
     train_psnr = []
+    val_loss = []
+    val_psnr = []
     test_loss = []
     test_psnr = []
-    current_best_eval_psnr = float('-inf')
+    current_best_val_psnr = float('-inf')
 
     # build dataloaders
     print('Building dataloaders...')
+    # TODO: add validation set
     seq_dir = os.path.join(args.vimeo_90k_path, 'sequences')
     train_txt = os.path.join(args.vimeo_90k_path, 'tri_trainlist.txt')
     test_txt = os.path.join(args.vimeo_90k_path, 'tri_testlist.txt')
@@ -80,20 +82,15 @@ if __name__ == '__main__':
             flow = i['first_last_frames_flow'][2]
             mid = i['middle_frame']
 
-            # forward pass
+            # autoencoder training
             first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
             mid_recon = autoencoder(first, last, flow)
             loss = criterion(mid, mid_recon)
-            mid_features = vgg16_bn(mid)
-            mid_recon_features = vgg16_bn(mid_recon)
-            # perceptual loss
-            for i in range(len(mid_features)):
-                loss += criterion(mid_features[i], mid_recon_features[i])
-            
-            # backpropagation
-            optimizer.zero_grad()
+            g_optimizer.zero_grad()
             loss.backward()
-            optimizer.step()
+            g_optimizer.step()
+
+            # TODO: discriminator training
 
             # store stats
             train_psnr_epoch += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())            
@@ -107,12 +104,14 @@ if __name__ == '__main__':
 
         train_psnr_epoch /= num_batches
         train_loss_epoch /= num_batches
-        print('Train error: %f, Train PSNR: %f' % (train_loss_epoch, train_psnr_epoch))
+        print('Epoch [%d / %d] Train error: %f, Train PSNR: %f' % (epoch+1, args.num_epochs, train_loss_epoch, train_psnr_epoch))
 
         # for evaluation, check test dataset, save best model and save statistics
         if epoch % args.eval_every == 0:
             train_loss.append(0)
             train_psnr.append(0)
+            val_loss.append(0)
+            val_psnr.append(0)
             test_loss.append(0)
             test_psnr.append(0)
             train_loss[-1] += train_loss_epoch
@@ -134,11 +133,6 @@ if __name__ == '__main__':
 
                     mid_recon = autoencoder(first, last, flow)
                     loss = criterion(mid, mid_recon)
-                    mid_features = vgg16_bn(mid)
-                    mid_recon_features = vgg16_bn(mid_recon)
-                    # perceptual loss
-                    for i in range(len(mid_features)):
-                        loss += criterion(mid_features[i], mid_recon_features[i])
 
                     # store stats
                     test_psnr[-1] += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
@@ -150,8 +144,8 @@ if __name__ == '__main__':
                 print('Test error: %f, Test PSNR: %f' % (test_loss[-1], test_psnr[-1]))
 
             # save best model
-            if test_psnr[-1] > current_best_eval_psnr:
-                current_best_eval_psnr = test_psnr[-1]
+            if test_psnr[-1] > current_best_val_psnr:
+                current_best_val_psnr = test_psnr[-1]
                 torch.save(autoencoder, args.save_model_path)
                 print("Saved new best model!")
 
@@ -159,6 +153,8 @@ if __name__ == '__main__':
             stats = {
                 'train_loss': train_loss,
                 'train_psnr': train_psnr,
+                'val_loss': val_loss,
+                'val_psnr': val_psnr,
                 'test_loss': test_loss,
                 'test_psnr': test_psnr
             }

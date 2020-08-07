@@ -12,22 +12,20 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--save_model_path', required=True)
+    parser.add_argument('--saved_model_path', required=True)
     parser.add_argument('--first_image', required=True)
     parser.add_argument('--last_image', required=True)
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = torch.load(args.save_model_path, map_location=torch.device(device))
+    model = torch.load(args.saved_model_path, map_location=torch.device(device))
 
     flow = get_optical_flow(args.first_image, args.last_image)
     first = PIL.Image.open(args.first_image)
     last = PIL.Image.open(args.last_image)
     flow = PIL.Image.fromarray(flow)
     transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
+        transforms.ToTensor()
     ])
     first = transforms(first)
     last = transforms(last)

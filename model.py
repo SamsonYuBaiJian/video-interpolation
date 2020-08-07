@@ -52,31 +52,18 @@ class Autoencoder(nn.Module):
         return x_recon
 
 
-class Vgg16_bn(torch.nn.Module):
-    def __init__(self):
-        super(Vgg16_bn, self).__init__()
-        vgg16_bn = models.vgg16_bn(pretrained=True)
-        for param in vgg16_bn.parameters():
-            param.requires_grad = False
-        # for name, mod in vgg16_bn.named_modules():
-        #     print(name, mod)
-        features = list(vgg16_bn.features)[:23]
-        self.features = nn.ModuleList(features).eval() 
-        
-    def forward(self, x):
-        results = []
-        for ii, model in enumerate(self.features):
-            x = model(x)
-            # get ReLU layers before each MaxPool2d
-            if ii in {5,12}:
-                results.append(x)
-        return results
-
-
 class Discriminator(nn.Module):
     def __init__(self, c):
         super(Discriminator, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1)
 
-    def forward(self):
-        pass
+        self.model = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(512, 256),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(256, 1),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        return self.model(x)

@@ -2,7 +2,7 @@
 
 ## TODO:
 - [X] Make the convolutional autoencoder
-- [X] Data processing
+- [X] Add validation split
 - [X] Dense optical flow
 - [X] PSNR evaluation metric for SOTA comparisons
 - [X] Skip connections
@@ -11,4 +11,4 @@
 - [X] Saving statistics
 - [X] Plotting statistics
 - [ ] Adversarial training
-- [X] Perceptual loss with VGG-16
+- [ ] Perceptual loss
