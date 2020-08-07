@@ -1,4 +1,3 @@
-# from model import VariationalAutoencoder, vae_loss
 from model import Autoencoder
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -60,8 +59,6 @@ if __name__ == '__main__':
 
             first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
 
-            # mid_recon, latent_mu, latent_logvar = model(first, last, flow)
-            # loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
             mid_recon = model(first, last, flow)
             loss = criterion(mid, mid_recon)
             
@@ -107,8 +104,6 @@ if __name__ == '__main__':
 
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
 
-                    # mid_recon, latent_mu, latent_logvar = vae(first, last, flow)
-                    # loss = vae_loss(mid_recon, mid, latent_mu, latent_logvar)
                     mid_recon = model(first, last, flow)
                     loss = criterion(mid, mid_recon)
 

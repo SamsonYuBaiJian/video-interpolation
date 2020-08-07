@@ -5,7 +5,6 @@
 - [X] Add PSNR evaluation metric for SOTA comparisons
 - [X] Add skip connections
 - [X] Add argparse
-- [] Allow saving of statistics
-- [] Add Global Average Pooling to allow for different image sizes
-- [] Add adversarial training
-- [] Add perceptual loss
+- [ ] Allow saving of statistics
+- [ ] Add adversarial training
+- [ ] Add perceptual loss
