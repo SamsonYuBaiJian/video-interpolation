@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
             # discriminator training
             d_optimizer.zero_grad()
-            d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
+            d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon.detach()), fake))
             d_loss.backward()
             d_optimizer.step()
 
