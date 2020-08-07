@@ -6,6 +6,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+import pickle
 
 
 class VimeoDataset(Dataset):
@@ -127,9 +128,26 @@ def save_optical_flow(video_dir, text_split):
             cv2.imwrite(os.path.join('/'.join(frames[0].split('/')[:-1]),'flow.png'), bgr)
 
 
-def save_stats(dir):
-    pass
+def save_stats(save_dir, exp_time, hyperparams, stats):
+    save_path = os.path.join(save_dir, exp_time)
+    os.makedirs(save_path, exist_ok=True)
+    if not os.path.exists(os.path.join(save_path, 'hyperparams.pickle')):
+        with open(os.path.join(save_path, 'hyperparams.pickle'), 'wb') as handle:
+            pickle.dump(hyperparams, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            handle.close()
+    with open(os.path.join(save_path, 'stats.pickle'), 'wb') as handle:
+        pickle.dump(stats, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        handle.close()
 
 
-def plot_stats():
-    pass
+def plot_stats(exp_dir):
+    with open(os.path.join(exp_dir, 'stats.pickle'), 'rb') as handle:
+        stats = pickle.load(handle)
+        handle.close()
+    with open(os.path.join(exp_dir, 'hyperparams.pickle'), 'rb') as handle:
+        hyperparams = pickle.load(handle)
+        handle.close()
+    
+    print("Experiment settings:\n{}".format(hyperparams))
+    
+    # TODO: Plot stats

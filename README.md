@@ -6,7 +6,7 @@
 - [X] Skip connections
 - [X] Argparse
 - [ ] Different image sizes
-- [ ] Saving statistics
+- [X] Saving statistics
 - [ ] Plotting statistics
 - [ ] Adversarial training
 - [ ] Perceptual loss with VGG-16

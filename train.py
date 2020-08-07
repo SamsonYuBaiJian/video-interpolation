@@ -6,6 +6,7 @@ from utils import VimeoDataset, generate, save_stats
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+from datetime import datetime
 
 
 if __name__ == '__main__':
@@ -23,6 +24,18 @@ if __name__ == '__main__':
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt')
     args = parser.parse_args()
+
+    # process information to save statistics
+    exp_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    hyperparams = {
+        'channels': args.channels,
+        'latent_dims': args.latent_dims,
+        'num_epochs': args.num_epochs,
+        'lr': args.lr,
+        'batch_size': args.batch_size,
+        'eval_every': args.eval_every,
+        'max_num_images': args.max_num_images
+    }
 
     # instantiate setup
     model = Autoencoder(args.channels, args.latent_dims)
@@ -138,15 +151,12 @@ if __name__ == '__main__':
                 print("Saved!")
 
             # save statistics
-            save_stats(args.save_stats_path, train_loss, train_psnr)
+            stats = {
+                'train_loss': train_loss,
+                'train_psnr': train_psnr,
+                'test_loss': test_loss,
+                'test_psnr': test_psnr
+            }
+            save_stats(args.save_stats_path, exp_time, hyperparams, stats)
 
             model.train()
-
-
-    # show how loss evolves during training
-    plt.ion()
-    fig = plt.figure()
-    plt.plot(train_loss)
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.show()
