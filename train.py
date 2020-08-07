@@ -2,7 +2,7 @@ from model import Autoencoder
 import torch
 from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
-from utils import VimeoDataset, generate
+from utils import VimeoDataset, generate, save_stats
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -17,12 +17,14 @@ if __name__ == '__main__':
     parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str)
+    parser.add_argument('--save_stats_path', type=str)
     # parser.add_argument('--show_images_every', default=10, type=int)
     parser.add_argument('--eval_every', default=10, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt')
     args = parser.parse_args()
 
+    # instantiate setup
     model = Autoencoder(args.channels, args.latent_dims)
     device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -31,11 +33,14 @@ if __name__ == '__main__':
     criterion.to(device)
     model.train()
 
-    train_loss_avg = []
-    train_psnr_avg = []
-    test_loss_avg = []
-    test_psnr_avg = []
+    # to store evaluation metrics
+    train_loss = []
+    train_psnr = []
+    test_loss = []
+    test_psnr = []
+    current_best_eval_psnr = 0
 
+    # build dataloaders
     print('Building dataloaders...')
     trainset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_trainlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
     testset = VimeoDataset(video_dir='../vimeo-90k/sequences', text_split='../vimeo-90k/tri_testlist.txt', transform= transforms.Compose([transforms.ToTensor()]))
@@ -43,22 +48,25 @@ if __name__ == '__main__':
     testloader = DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=0)
     print('Dataloaders successfully built!')
 
-    current_best_eval_psnr = 0
+    # TODO: load VGG-16 for perceptual loss
+
+    # start training
     print('\nTraining...')
     for epoch in range(args.num_epochs):
-        train_loss_avg.append(0)
-        train_psnr_avg.append(0)
+        train_loss.append(0)
+        train_psnr.append(0)
         num_batches = 0
         
         # use mini batches from trainloader
         for i in trainloader:
+            # load data
             first = i['first_last_frames_flow'][0]
             last = i['first_last_frames_flow'][1]
             flow = i['first_last_frames_flow'][2]
             mid = i['middle_frame']
 
+            # forward pass
             first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-
             mid_recon = model(first, last, flow)
             loss = criterion(mid, mid_recon)
             
@@ -74,24 +82,26 @@ if __name__ == '__main__':
                 mid = mid.detach().to('cpu').numpy()
                 mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
                 psnr = 10 * np.log10(1 / mse)
-                train_psnr_avg[-1] += np.mean(psnr)
+                train_psnr[-1] += np.mean(psnr)
             model.train()
             
-            train_loss_avg[-1] += loss.item()
+            train_loss[-1] += loss.item()
             num_batches += 1
 
             if args.max_num_images is not None:
                 if num_batches == int(float(args.max_num_images) / args.batch_size):
                     break
 
-        train_loss_avg[-1] /= num_batches
-        train_psnr_avg[-1] /= num_batches
-        print('Train error: %f, Train PSNR: %f' % (train_loss_avg[-1], train_psnr_avg[-1]))
+        train_loss[-1] /= num_batches
+        train_psnr[-1] /= num_batches
+        print('Train error: %f, Train PSNR: %f' % (train_loss[-1], train_psnr[-1]))
 
+        # for evaluation, check test dataset, save best model and save statistics
         if (epoch+1) % args.eval_every == 0:
-            test_loss_avg.append(0)
-            test_psnr_avg.append(0)
+            test_loss.append(0)
+            test_psnr.append(0)
 
+            # check test dataset
             print('Evaluating...')
             model.eval()
             with torch.no_grad():
@@ -112,19 +122,23 @@ if __name__ == '__main__':
                     mid = mid.detach().to('cpu').numpy()
                     mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
                     psnr = 10 * np.log10(1 / mse)
-                    test_psnr_avg[-1] += np.mean(psnr)
-                    test_loss_avg[-1] += loss.item()
+                    test_psnr[-1] += np.mean(psnr)
+                    test_loss[-1] += loss.item()
                     num_batches += 1
 
-                test_loss_avg[-1] /= num_batches
-                test_psnr_avg[-1] /= num_batches
-                print('Test error: %f, Test PSNR: %f' % (test_loss_avg[-1], test_psnr_avg[-1]))
+                test_loss[-1] /= num_batches
+                test_psnr[-1] /= num_batches
+                print('Test error: %f, Test PSNR: %f' % (test_loss[-1], test_psnr[-1]))
 
-            if test_psnr_avg[-1] > current_best_eval_psnr:
+            # save best model
+            if test_psnr[-1] > current_best_eval_psnr:
                 print("Saving new best model...")
-                current_best_eval_psnr = test_psnr_avg[-1]
+                current_best_eval_psnr = test_psnr[-1]
                 torch.save(model, args.save_model_path)
                 print("Saved!")
+
+            # save statistics
+            save_stats(args.save_stats_path, train_loss, train_psnr)
 
             model.train()
 
@@ -132,7 +146,7 @@ if __name__ == '__main__':
     # show how loss evolves during training
     plt.ion()
     fig = plt.figure()
-    plt.plot(train_loss_avg)
+    plt.plot(train_loss)
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.show()

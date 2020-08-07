@@ -1,10 +1,12 @@
 # Video Frame Interpolation
 
 ## TODO:
-- [X] Add dense optical flow
-- [X] Add PSNR evaluation metric for SOTA comparisons
-- [X] Add skip connections
-- [X] Add argparse
-- [ ] Allow saving of statistics
-- [ ] Add adversarial training
-- [ ] Add perceptual loss
+- [X] Dense optical flow
+- [X] PSNR evaluation metric for SOTA comparisons
+- [X] Skip connections
+- [X] Argparse
+- [ ] Different image sizes
+- [ ] Saving statistics
+- [ ] Plotting statistics
+- [ ] Adversarial training
+- [ ] Perceptual loss with VGG-16

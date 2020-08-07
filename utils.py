@@ -127,5 +127,9 @@ def save_optical_flow(video_dir, text_split):
             cv2.imwrite(os.path.join('/'.join(frames[0].split('/')[:-1]),'flow.png'), bgr)
 
 
-def save_stats():
+def save_stats(dir):
+    pass
+
+
+def plot_stats():
     pass

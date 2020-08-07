@@ -18,7 +18,8 @@ class Encoder(nn.Module):
         econv3 = F.relu(self.conv3(econv2))
         latent = F.relu(self.conv4(econv3))
         # x = econv4.view(econv4.size(0), -1)
-        return latent, econv1, econv2, econv3 # econv4
+        return latent, econv1, econv2, econv3
+
 
 class Decoder(nn.Module):
     def __init__(self, c):
@@ -37,6 +38,7 @@ class Decoder(nn.Module):
         img = self.conv1(torch.cat([x, econv1], dim=1))
         return img
 
+
 class Autoencoder(nn.Module):
     def __init__(self, c, latent_dims):
         super(Autoencoder, self).__init__()
@@ -47,3 +49,12 @@ class Autoencoder(nn.Module):
         latent, econv1, econv2, econv3 = self.encoder(first, last, flow)
         x_recon = self.decoder(latent, econv1, econv2, econv3)
         return x_recon
+
+
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        pass
+
+    def forward(self):
+        pass
