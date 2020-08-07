@@ -63,11 +63,9 @@ class VimeoDataset(Dataset):
 def imshow(inp):
     """Imshow for Tensor."""
     inp = inp.numpy().transpose((1, 2, 0))
-    means = [0.485, 0.456, 0.406]
-    stds = [0.229, 0.224, 0.225]
-    mean = np.array(means)
-    std = np.array(stds)
-    inp = std * inp + mean
+    # mean = np.array(means)
+    # std = np.array(stds)
+    # inp = std * inp + mean
     inp = np.clip(inp, 0, 1)
     plt.imshow(inp)
     plt.pause(0.001)
@@ -126,41 +124,6 @@ def save_stats(save_dir, exp_time, hyperparams, stats):
     with open(os.path.join(save_path, 'stats.pickle'), 'wb') as handle:
         pickle.dump(stats, handle, protocol=pickle.HIGHEST_PROTOCOL)
         handle.close()
-
-
-def plot_stats(exp_dir):
-    with open(os.path.join(exp_dir, 'stats.pickle'), 'rb') as handle:
-        stats = pickle.load(handle)
-        handle.close()
-    with open(os.path.join(exp_dir, 'hyperparams.pickle'), 'rb') as handle:
-        hyperparams = pickle.load(handle)
-        handle.close()
-    
-    print("Experiment settings:\n{}".format(hyperparams))
-    
-    # Plot stats
-    epoch_interval = hyperparams['eval_every']
-
-    train_loss = stats['train_loss']
-    train_psnr = stats['train_psnr']
-    val_loss = stats['test_loss']
-    val_psnr = stats['test_psnr']
-    test_loss = stats['test_loss']
-    test_psnr = stats['test_psnr']
-    length = len(train_loss)
-    epochs = [epoch_interval * i for i in range(length)]
-
-    _, axes = plt.subplots(1, 2)
-    axes[0,0].set_title('Loss vs Epoch')
-    axes[0,1].set_title('PSNR vs Epoch')
-    axes[0,0].plot(epochs, train_loss, label='Train loss')
-    axes[0,0].plot(epochs, val_loss, label='Val loss')
-    axes[0,0].plot(epochs, test_loss, label='Test loss')
-    axes[0,1].plot(epochs, train_psnr, label='Train PSNR')
-    axes[0,1].plot(epochs, val_psnr, label='Val PSNR')
-    axes[0,1].plot(epochs, test_psnr, label='Test PSNR')
-
-    plt.show()
 
 
 def get_psnr(mid, mid_recon):

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = torch.load(args.saved_model_path, map_location=torch.device(device))
+    autoencoder = torch.load(args.saved_model_path, map_location=torch.device(device))
 
     flow = get_optical_flow(args.first_image, args.last_image)
     first = PIL.Image.open(args.first_image)
@@ -31,9 +31,9 @@ if __name__ == '__main__':
     last = transforms(last)
     flow = transforms(flow)
 
-    model.eval()
+    autoencoder.eval()
 
     with torch.no_grad():
-        img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device), flow.unsqueeze(0).to(device))
+        img_recon = autoencoder(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device), flow.unsqueeze(0).to(device))
         tensor_list = [first, img_recon.squeeze(0), last]
         imshow(torchvision.utils.make_grid(tensor_list))
