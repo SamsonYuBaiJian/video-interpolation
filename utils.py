@@ -94,6 +94,10 @@ def get_optical_flow(first, last):
 
 
 def save_optical_flow(video_dir, text_split):
+    """
+    Args:
+        video_dir (string): Vimeo-90k sequences directory.
+    """
     with open(text_split, 'r') as f:
         filenames = f.readlines()
         f.close()

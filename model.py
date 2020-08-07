@@ -59,11 +59,21 @@ class Discriminator(nn.Module):
         self.model = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 256),
+            nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(256, 1),
-            nn.Sigmoid(),
+            nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
         )
+        self.fc1 = nn.Linear(2*c*32*56, 512)
+        self.fc2 = nn.Linear(512, 1)
+        self.sigmoid = nn.Sigmoid()
+
 
     def forward(self, x):
-        return self.model(x)
+        x = self.model(x)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.sigmoid(x)
+
+        return x
