@@ -142,9 +142,6 @@ if __name__ == '__main__':
                     test_psnr[-1] += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
                     test_loss[-1] += loss.item()
                     num_batches += 1
-                    
-                    # TODO: REMOVE
-                    break
 
                 test_loss[-1] /= num_batches
                 test_psnr[-1] /= num_batches

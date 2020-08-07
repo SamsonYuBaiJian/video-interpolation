@@ -74,9 +74,9 @@ class Vgg16_bn(torch.nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, c):
         super(Discriminator, self).__init__()
-        pass
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1)
 
     def forward(self):
         pass
