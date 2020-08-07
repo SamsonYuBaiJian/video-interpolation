@@ -93,13 +93,13 @@ if __name__ == '__main__':
             g_optimizer.zero_grad()
             mid_recon = autoencoder(first, last, flow)
             g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-            g_loss.backward(retain_graph=True)
+            g_loss.backward()
             g_optimizer.step()
 
             # discriminator training
             d_optimizer.zero_grad()
             d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
-            d_loss.backward()
+            d_loss.backward(retain_graph=True)
             d_optimizer.step()
 
             # store stats       
