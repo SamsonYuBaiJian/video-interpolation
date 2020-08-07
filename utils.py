@@ -151,3 +151,23 @@ def plot_stats(exp_dir):
     print("Experiment settings:\n{}".format(hyperparams))
     
     # TODO: Plot stats
+    epoch_interval = hyperparams['eval_every']
+
+    train_loss = stats['train_loss']
+    train_psnr = stats['train_psnr']
+    test_loss = stats['test_loss']
+    test_psnr = stats['test_psnr']
+    length = len(train_loss)
+
+    fig, ax = plt.subplots((2,2))
+    ax[0,0].set_title('Train Loss')
+    ax[0,1].set_title('Train PSNR')
+    ax[1,0].set_title('Test Loss')
+    ax[1,1].set_title('Test PSNR')
+
+    ax[0,0].plot(length, train_loss)
+    ax[0,1].plot(length, train_psnr)
+    ax[1,0].plot(length, test_loss)
+    ax[1,1].plot(length, test_psnr)
+
+    plt.show()

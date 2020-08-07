@@ -151,9 +151,10 @@ if __name__ == '__main__':
                 print("Saved!")
 
             # save statistics
+
             stats = {
-                'train_loss': train_loss,
-                'train_psnr': train_psnr,
+                'train_loss': [train_loss[i] for i in range(args.eval_every-1, epoch+1, args.eval_every)],
+                'train_psnr': [train_psnr[i] for i in range(args.eval_every-1, epoch+1, args.eval_every)],
                 'test_loss': test_loss,
                 'test_psnr': test_psnr
             }

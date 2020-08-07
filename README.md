@@ -7,6 +7,6 @@
 - [X] Argparse
 - [ ] Different image sizes
 - [X] Saving statistics
-- [ ] Plotting statistics
+- [X] Plotting statistics
 - [ ] Adversarial training
 - [ ] Perceptual loss with VGG-16
