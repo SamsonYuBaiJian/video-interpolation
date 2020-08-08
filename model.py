@@ -57,31 +57,31 @@ class Autoencoder(nn.Module):
         return x_recon
 
 
-class Discriminator(nn.Module):
-    def __init__(self, c, latent_dims):
-        super(Discriminator, self).__init__()
+# class Discriminator(nn.Module):
+#     def __init__(self, c, latent_dims):
+#         super(Discriminator, self).__init__()
 
-        self.model = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c*2),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(c*3),
-            nn.LeakyReLU(0.2, inplace=True),
-        )
-        self.fc1 = nn.Linear(3*c*32*56, latent_dims)
-        self.fc2 = nn.Linear(latent_dims, 1)
-        self.sigmoid = nn.Sigmoid()
+#         self.model = nn.Sequential(
+#             nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1),
+#             nn.BatchNorm2d(c),
+#             nn.LeakyReLU(0.2, inplace=True),
+#             nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
+#             nn.BatchNorm2d(c*2),
+#             nn.LeakyReLU(0.2, inplace=True),
+#             nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1),
+#             nn.BatchNorm2d(c*3),
+#             nn.LeakyReLU(0.2, inplace=True),
+#         )
+#         self.fc1 = nn.Linear(3*c*32*56, latent_dims)
+#         self.fc2 = nn.Linear(latent_dims, 1)
+#         self.sigmoid = nn.Sigmoid()
 
 
-    def forward(self, x):
-        x = self.model(x)
-        x = x.view(x.size(0), -1)
-        x = F.leaky_relu(self.fc1(x))
-        x = F.leaky_relu(self.fc2(x))
-        x = self.sigmoid(x)
+#     def forward(self, x):
+#         x = self.model(x)
+#         x = x.view(x.size(0), -1)
+#         x = F.leaky_relu(self.fc1(x))
+#         x = F.leaky_relu(self.fc2(x))
+#         x = self.sigmoid(x)
 
-        return x
+#         return x
