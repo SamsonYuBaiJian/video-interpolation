@@ -137,7 +137,6 @@ if __name__ == '__main__':
 
             autoencoder.eval()
             discriminator.eval()
-            print('Evaluating...')
             with torch.no_grad():
                 num_batches = 0
                 for i in valloader:
@@ -145,6 +144,8 @@ if __name__ == '__main__':
                     last = i['first_last_frames_flow'][1]
                     flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
+                    if num_batches == 0:
+                        print('Evaluating for {} batches of {}, estimated time: {} seconds'.format(len(valloader), mid.shape[0], time_taken * len(valloader)))
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
                     valid = torch.ones(mid.shape[0], 1).to(device)
                     fake = torch.zeros(mid.shape[0], 1).to(device)
