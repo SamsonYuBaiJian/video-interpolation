@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--latent_dims', default=512, type=int)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--time_it', action='store_true')
-    parser.add_argument('--time_check', default=20, type=int)
+    parser.add_argument('--time_check_every', default=20, type=int)
     args = parser.parse_args()
 
     # process information to save statistics
@@ -124,12 +124,12 @@ if __name__ == '__main__':
                 if num_batches == train_batches:
                     break
 
-            # time calculations
+            # train time calculations
             if args.time_it:
                 time_now = time.time()
                 time_taken = time_now - start_time
                 start_time = time_now
-                if num_batches % args.time_check == 0:
+                if num_batches % args.time_check_every == 0:
                     batches_left = train_batches - num_batches
                     print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left'.format(epoch+1, args.num_epochs, mid.shape[0], 
                         time_taken, time_taken * batches_left, batches_left, train_batches))
@@ -147,6 +147,10 @@ if __name__ == '__main__':
 
             autoencoder.eval()
             discriminator.eval()
+
+            start_time = time.time()
+            val_batches = len(valloader)
+
             with torch.no_grad():
                 num_batches = 0
                 for i in valloader:
@@ -154,10 +158,6 @@ if __name__ == '__main__':
                     last = i['first_last_frames_flow'][1]
                     flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
-
-                    # print evaluation time
-                    if num_batches == 0:
-                        print('Evaluating for {} batches of {}, estimated time: {} seconds'.format(len(valloader), mid.shape[0], time_taken * len(valloader)))
                     
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
                     valid = torch.ones(mid.shape[0], 1).to(device)
@@ -172,6 +172,16 @@ if __name__ == '__main__':
                     val_loss[-1][0] += g_loss.item()
                     val_loss[-1][1] += d_loss.item()
                     num_batches += 1
+
+                    # val time calculations
+                    if args.time_it:
+                        time_now = time.time()
+                        time_taken = time_now - start_time
+                        start_time = time_now
+                        if num_batches % args.time_check_every == 0:
+                            batches_left = val_batches - num_batches
+                            print('Evaluating at Epoch [{} / {}] {} seconds for {} / {} batches of {} left'.format(epoch+1, args.num_epochs, 
+                                time_taken * len(valloader), batches_left, val_batches, mid.shape[0]))
 
                 val_loss[-1][0] /= num_batches
                 val_loss[-1][1] /= num_batches
