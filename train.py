@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
     parser.add_argument('--save_stats_path', type=str, required=True)
-    parser.add_argument('--eval_every', default=10, type=int)
+    parser.add_argument('--eval_every', default=5, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
     parser.add_argument('--latent_dims', default=512, type=int)
