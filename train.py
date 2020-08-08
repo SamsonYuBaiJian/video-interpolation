@@ -84,7 +84,7 @@ if __name__ == '__main__':
         for i in trainloader:
             # load data
             if args.time_it:
-                start_time = time.perf_counter()
+                start_time = time.time()
 
             first = i['first_last_frames_flow'][0]
             last = i['first_last_frames_flow'][1]
@@ -115,8 +115,8 @@ if __name__ == '__main__':
             num_batches += 1
 
             if args.time_it:
-                time_taken = time.perf_counter() - start_time
-                train_batches = np.ceil(float(args.max_num_images) / args.batch_size)
+                time_taken = time.time() - start_time
+                train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
                 print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds per epoch for {} batches'.format(epoch+1, args.num_epochs, mid.shape[0], 
                     time_taken, time_taken * train_batches, train_batches))
 
