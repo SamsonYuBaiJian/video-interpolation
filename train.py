@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--eval_every', default=5, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
-    # parser.add_argument('--latent_dims', default=512, type=int)
+    parser.add_argument('--latent_dims', default=512, type=int)
     parser.add_argument('--time_it', action='store_true')
     parser.add_argument('--time_check_every', default=20, type=int)
     args = parser.parse_args()
