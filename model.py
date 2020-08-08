@@ -80,7 +80,7 @@ class Decoder(nn.Module):
         self.bn2 = nn.BatchNorm2d(c)
         self.bn3 = nn.BatchNorm2d(c*2)
         self.bn4 = nn.BatchNorm2d(c*2)
-        self.fc(latent_dims, c*3*16*28)
+        self.fc = nn.Linear(latent_dims, c*3*16*28)
             
     def forward(self, x, econv1, econv2, econv3, econv4):
         x = F.relu(self.fc)
