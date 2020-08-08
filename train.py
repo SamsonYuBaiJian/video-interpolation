@@ -14,7 +14,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--channels', default=64, type=int)
     parser.add_argument('--num_epochs', default=150, type=int)
-    parser.add_argument('--lr', default=1e-4, type=float)
+    parser.add_argument('--lr', default=2e-4, type=float)
     parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
@@ -23,7 +23,6 @@ if __name__ == '__main__':
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
     parser.add_argument('--latent_dims', default=512, type=int)
-    parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--time_it', action='store_true')
     parser.add_argument('--time_check_every', default=20, type=int)
     args = parser.parse_args()
@@ -38,7 +37,6 @@ if __name__ == '__main__':
         'eval_every': args.eval_every,
         'max_num_images': args.max_num_images,
         'latent_dims': args.latent_dims,
-        'weight_decay': args.weight_decay
     }
 
     # instantiate setup
@@ -47,8 +45,8 @@ if __name__ == '__main__':
     autoencoder = autoencoder.to(device)
     discriminator = Discriminator(args.channels, args.latent_dims)
     discriminator = discriminator.to(device)
-    g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr,betas=(0.5, 0.999))
     l1_loss = torch.nn.L1Loss()
     l1_loss.to(device)
     bce_loss = torch.nn.BCELoss()
