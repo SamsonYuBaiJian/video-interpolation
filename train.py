@@ -114,15 +114,15 @@ if __name__ == '__main__':
             train_loss_epoch[1] = d_loss.item()
             num_batches += 1
 
+            if args.max_num_images is not None:
+                if num_batches == np.ceil(float(args.max_num_images) / args.batch_size):
+                    break
+
             if args.time_it:
                 time_taken = time.time() - start_time
                 train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
                 print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds per epoch for {} batches'.format(epoch+1, args.num_epochs, mid.shape[0], 
                     time_taken, time_taken * train_batches, train_batches))
-
-            if args.max_num_images is not None:
-                if num_batches == np.ceil(float(args.max_num_images) / args.batch_size):
-                    break
 
         train_loss_epoch[0] /= num_batches
         train_loss_epoch[1] /= num_batches
