@@ -78,9 +78,9 @@ class Decoder(nn.Module):
     def forward(self, x, econv1, econv2, econv3, econv4):
         x = F.relu(self.fc(x))
         x = x.view(x.size(0), self.c*3, 16, 28)
-        x = F.relu(torch.cat([x, econv4], dim=1))
-        x = F.relu(torch.cat([x, econv3], dim=1))
-        x = F.relu(torch.cat([x, econv2], dim=1))
+        x = F.relu(self.conv4(torch.cat([x, econv4], dim=1)))
+        x = F.relu(self.conv3(torch.cat([x, econv3], dim=1)))
+        x = F.relu(self.conv2(torch.cat([x, econv2], dim=1)))
         img = torch.tanh(self.conv1(torch.cat([x, econv1], dim=1)))
         return img
 
