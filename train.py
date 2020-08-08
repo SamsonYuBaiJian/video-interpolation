@@ -115,7 +115,10 @@ if __name__ == '__main__':
             num_batches += 1
 
             if args.time_it:
-                print('Epoch [{} / {}] Time per batch of {}: {} seconds'.format(epoch+1, args.num_epochs, mid.shape[0], time.perf_counter() - start_time))
+                time_taken = time.perf_counter() - start_time
+                train_batches = np.ceil(float(args.max_num_images) / args.batch_size)
+                print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds per epoch for {} batches'.format(epoch+1, args.num_epochs, mid.shape[0], 
+                    time_taken, time_taken * train_batches, train_batches))
 
             if args.max_num_images is not None:
                 if num_batches == np.ceil(float(args.max_num_images) / args.batch_size):
