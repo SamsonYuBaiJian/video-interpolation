@@ -12,6 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
+    parser.add_argument('--saved_model_path', type=str, required=True)
     args = parser.parse_args()
 
     # instantiate setup
@@ -35,8 +36,6 @@ if __name__ == '__main__':
     with torch.no_grad():
         psnr = 0
         for i in testloader:
-            # check val dataset
-            print('Testing...')
             num_batches = 0
             for i in testloader:
                 first = i['first_last_frames_flow'][0]

@@ -17,24 +17,20 @@ def plot_stats(exp_dir):
     # Plot stats
     epoch_interval = hyperparams['eval_every']
 
-    train_loss = stats['train_loss']
-    train_psnr = stats['train_psnr']
-    val_loss = stats['test_loss']
-    val_psnr = stats['test_psnr']
-    test_loss = stats['test_loss']
-    test_psnr = stats['test_psnr']
-    length = len(train_loss)
+    train_g_loss = [i[0] for i in stats['train_loss']]
+    train_d_loss = [i[1] for i in stats['train_loss']]
+    val_g_loss = [i[0] for i in stats['val_loss']]
+    val_d_loss = [i[1] for i in stats['val_loss']]
+    length = len(stats['train_loss'])
     epochs = [epoch_interval * i for i in range(length)]
 
     _, axes = plt.subplots(1, 2)
-    axes[0,0].set_title('Loss vs Epoch')
-    axes[0,1].set_title('PSNR vs Epoch')
-    axes[0,0].plot(epochs, train_loss, label='Train loss')
-    axes[0,0].plot(epochs, val_loss, label='Val loss')
-    axes[0,0].plot(epochs, test_loss, label='Test loss')
-    axes[0,1].plot(epochs, train_psnr, label='Train PSNR')
-    axes[0,1].plot(epochs, val_psnr, label='Val PSNR')
-    axes[0,1].plot(epochs, test_psnr, label='Test PSNR')
+    axes[0].set_title('G Loss vs Epoch')
+    axes[1].set_title('D Loss vs Epoch')
+    axes[0].plot(epochs, train_g_loss, label='Train G loss')
+    axes[0].plot(epochs, train_d_loss, label='Val G loss')
+    axes[1].plot(epochs, val_g_loss, label='Train D loss')
+    axes[1].plot(epochs, val_d_loss, label='Val D loss')
 
     plt.show()
 
