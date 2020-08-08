@@ -85,7 +85,7 @@ if __name__ == '__main__':
             # load data
             if args.time_it:
                 # start_time = time.time()
-                print(datetime.datetime.now().time())
+                print(datetime.now().time())
 
             first = i['first_last_frames_flow'][0]
             last = i['first_last_frames_flow'][1]
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                     break
 
             if args.time_it:
-                print(datetime.datetime.now().time())
+                print(datetime.now().time())
                 # time_taken = time.time() - start_time
                 # train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
                 # print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds per epoch for {} batches'.format(epoch+1, args.num_epochs, mid.shape[0], 
