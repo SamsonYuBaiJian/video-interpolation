@@ -33,9 +33,9 @@ class Decoder(nn.Module):
         self.conv3 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
         self.conv2 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c, kernel_size=4, stride=2, padding=1)
         self.conv1 = nn.ConvTranspose2d(in_channels=c*2, out_channels=3, kernel_size=4, stride=2, padding=1)
-        self.bn2 = nn.BatchNorm2d(c*2*2)
-        self.bn3 = nn.BatchNorm2d(c*2*2)
-        self.bn4 = nn.BatchNorm2d(c*3)
+        self.bn2 = nn.BatchNorm2d(c)
+        self.bn3 = nn.BatchNorm2d(c*2)
+        self.bn4 = nn.BatchNorm2d(c*2)
             
     def forward(self, x, econv1, econv2, econv3):
         x = F.relu(self.bn4(self.conv4(x)))
