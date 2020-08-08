@@ -1,6 +1,5 @@
 import PIL
 import torchvision.transforms as transforms
-from utils import imshow
 import numpy as np
 import torch
 import torchvision
@@ -23,7 +22,8 @@ if __name__ == '__main__':
     autoencoder.eval()
     
     transforms = transforms.Compose([
-        transforms.ToTensor()
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
     multiple = 1
@@ -45,6 +45,12 @@ if __name__ == '__main__':
             img_recon = autoencoder(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device), flow.unsqueeze(0).to(device))
         
         img_recon = img_recon.squeeze(0)
+        img_recon = img_recon.numpy().transpose((1, 2, 0))
+        mean = np.array([0.5, 0.5, 0.5])
+        std = np.array([0.5, 0.5, 0.5])
+        img_recon = std * img_recon + mean
+        img_recon = np.clip(img_recon, 0, 1)
+
         # PIL.Image.fromarray((first.numpy().transpose((1, 2, 0)) * 255).astype(np.uint8)).save("{}/{}.png".format(args.save_vid_dir, cnt))
-        PIL.Image.fromarray((img_recon.numpy().transpose((1, 2, 0)) * 255).astype(np.uint8)).save("{}/{}.png".format(args.save_vid_dir, i))
+        PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/{}.png".format(args.save_vid_dir, i))
         # PIL.Image.fromarray((last.numpy().transpose((1, 2, 0)) * 255).astype(np.uint8)).save("{}/{}.png".format(args.save_vid_dir, i + 2))
