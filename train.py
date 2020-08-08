@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import argparse
 from datetime import datetime
 import os
+import time
 
 
 if __name__ == '__main__':
@@ -23,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
     parser.add_argument('--latent_dims', default=512, type=int)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
+    parser.add_argument('--time_it', default=False, type=bool)
     args = parser.parse_args()
 
     # process information to save statistics
@@ -81,6 +83,8 @@ if __name__ == '__main__':
         discriminator.train()
         for i in trainloader:
             # load data
+            if args.time_it:
+                start_time = time.clock()
             first = i['first_last_frames_flow'][0]
             last = i['first_last_frames_flow'][1]
             flow = i['first_last_frames_flow'][2]
@@ -108,6 +112,9 @@ if __name__ == '__main__':
             train_loss_epoch[0] = g_loss.item()
             train_loss_epoch[1] = d_loss.item()
             num_batches += 1
+
+            if args.time_it:
+                print('Time per batch of {}: {}'.format(mid.shape[0], time.clock() - start_time))
 
             if args.max_num_images is not None:
                 if num_batches == np.ceil(float(args.max_num_images) / args.batch_size):
