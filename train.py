@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
     parser.add_argument('--latent_dims', default=512, type=int)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
-    parser.add_argument('--time_it', default=False, type=bool)
+    parser.add_argument('--time_it', action='store_true')
     args = parser.parse_args()
 
     # process information to save statistics
