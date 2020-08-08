@@ -12,3 +12,4 @@
 - [X] Plotting statistics
 - [X] Adversarial training
 - [ ] Perceptual loss
+- [ ] Video maker
