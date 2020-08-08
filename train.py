@@ -25,6 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--latent_dims', default=512, type=int)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--time_it', action='store_true')
+    parser.add_argument('--time_check', default=20, type=int)
     args = parser.parse_args()
 
     # process information to save statistics
@@ -84,6 +85,10 @@ if __name__ == '__main__':
 
         # for time calculations
         start_time = time.time()
+        if args.max_num_images is not None:
+            train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
+        else:
+            train_batches = len(trainloader)
         
         for i in trainloader:
             # load data
@@ -116,7 +121,7 @@ if __name__ == '__main__':
             num_batches += 1
 
             if args.max_num_images is not None:
-                if num_batches == np.ceil(float(args.max_num_images) / args.batch_size):
+                if num_batches == train_batches:
                     break
 
             # time calculations
@@ -124,12 +129,10 @@ if __name__ == '__main__':
                 time_now = time.time()
                 time_taken = time_now - start_time
                 start_time = time_now
-                if args.max_num_images is not None:
-                    train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
-                else:
-                    train_batches = len(trainloader)
-                print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds per epoch for {} batches'.format(epoch+1, args.num_epochs, mid.shape[0], 
-                    time_taken, time_taken * train_batches, train_batches))
+                if num_batches % args.time_check == 0:
+                    batches_left = train_batches - num_batches
+                    print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left'.format(epoch+1, args.num_epochs, mid.shape[0], 
+                        time_taken, time_taken * batches_left, batches_left, train_batches))
 
         train_loss_epoch[0] /= num_batches
         train_loss_epoch[1] /= num_batches
