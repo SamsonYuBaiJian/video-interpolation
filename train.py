@@ -1,4 +1,4 @@
-from model import Autoencoder, Discriminator
+from model import Autoencoder #, Discriminator
 import torch
 from torch.utils.data import DataLoader, Dataset
 from utils import VimeoDataset, save_stats, get_psnr
@@ -159,8 +159,8 @@ if __name__ == '__main__':
                     mid = i['middle_frame']
                     
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-                    valid = torch.ones(mid.shape[0], 1).to(device)
-                    fake = torch.zeros(mid.shape[0], 1).to(device)
+                    # valid = torch.ones(mid.shape[0], 1).to(device)
+                    # fake = torch.zeros(mid.shape[0], 1).to(device)
 
                     mid_recon = autoencoder(first, last, flow)
                     # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
