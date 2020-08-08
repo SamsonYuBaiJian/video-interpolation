@@ -83,7 +83,7 @@ class Decoder(nn.Module):
         self.fc = nn.Linear(latent_dims, c*3*16*28)
             
     def forward(self, x, econv1, econv2, econv3, econv4):
-        x = F.relu(self.fc)
+        x = F.relu(self.fc(x))
         x = x.view(x.size(0), self.c*3, 16, 28)
         x = F.relu(self.bn4(self.conv4(torch.cat([x, econv4], dim=1))))
         x = F.relu(self.bn3(self.conv3(torch.cat([x, econv3], dim=1))))
