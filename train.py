@@ -117,9 +117,9 @@ if __name__ == '__main__':
                     break
 
             if args.time_it:
-                time = time.time()
-                time_taken = time - start_time
-                start_time = time
+                time_now = time.time()
+                time_taken = time_now - start_time
+                start_time = time_now
                 train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
                 print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds per epoch for {} batches'.format(epoch+1, args.num_epochs, mid.shape[0], 
                     time_taken, time_taken * train_batches, train_batches))
