@@ -21,7 +21,7 @@ class Encoder(nn.Module):
         econv1 = F.relu(self.bn1(self.conv1(x)))
         econv2 = F.relu(self.bn2(self.conv2(econv1)))
         econv3 = F.relu(self.bn3(self.conv3(econv2)))
-        latent = F.tanh(self.bn4(self.conv4(econv3)))
+        latent = torch.tanh(self.bn4(self.conv4(econv3)))
         return latent, econv1, econv2, econv3
 
 
