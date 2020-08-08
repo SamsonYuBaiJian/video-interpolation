@@ -129,7 +129,7 @@ if __name__ == '__main__':
                 time_now = time.time()
                 time_taken = time_now - start_time
                 start_time = time_now
-                if num_batches % args.time_check_every == 0:
+                if num_batches == 1 or num_batches % args.time_check_every == 0:
                     batches_left = train_batches - num_batches
                     print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left'.format(epoch+1, args.num_epochs, mid.shape[0], 
                         time_taken, time_taken * batches_left, batches_left, train_batches))
@@ -178,7 +178,7 @@ if __name__ == '__main__':
                         time_now = time.time()
                         time_taken = time_now - start_time
                         start_time = time_now
-                        if num_batches % args.time_check_every == 0:
+                        if num_batches == 1 or num_batches % args.time_check_every == 0:
                             batches_left = val_batches - num_batches
                             print('Evaluating at Epoch [{} / {}] {} seconds for {} / {} batches of {} left'.format(epoch+1, args.num_epochs, 
                                 time_taken * len(valloader), batches_left, val_batches, mid.shape[0]))
