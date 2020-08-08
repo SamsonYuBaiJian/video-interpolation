@@ -11,14 +11,17 @@ class Encoder(nn.Module):
         self.conv2 = nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1) # out: 2c x 64 x 112
         self.conv3 = nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1) # out: 2c x 32 x 56
         self.conv4 = nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1) # out: 3c x 16 x 28
+        self.bn1 = nn.BatchNorm2d(c)
+        self.bn2 = nn.BatchNorm2d(c*2)
+        self.bn3 = nn.BatchNorm2d(c*2)
+        self.bn4 = nn.BatchNorm2d(c*3)
             
     def forward(self, first, last, flow):
         x = torch.cat([first, last, flow], 1)
-        econv1 = F.relu(self.conv1(x))
-        econv2 = F.relu(self.conv2(econv1))
-        econv3 = F.relu(self.conv3(econv2))
-        latent = F.relu(self.conv4(econv3))
-        # x = econv4.view(econv4.size(0), -1)
+        econv1 = F.relu(self.bn1(self.conv1(x)))
+        econv2 = F.relu(self.bn2(self.conv2(econv1)))
+        econv3 = F.relu(self.bn3(self.conv3(econv2)))
+        latent = F.tanh(self.bn4(self.conv4(econv3)))
         return latent, econv1, econv2, econv3
 
 
@@ -30,13 +33,15 @@ class Decoder(nn.Module):
         self.conv3 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c*2, kernel_size=4, stride=2, padding=1)
         self.conv2 = nn.ConvTranspose2d(in_channels=c*2*2, out_channels=c, kernel_size=4, stride=2, padding=1)
         self.conv1 = nn.ConvTranspose2d(in_channels=c*2, out_channels=3, kernel_size=4, stride=2, padding=1)
+        self.bn2 = nn.BatchNorm2d(c*2*2)
+        self.bn3 = nn.BatchNorm2d(c*2*2)
+        self.bn4 = nn.BatchNorm2d(c*3)
             
-    # def forward(self, x):
     def forward(self, x, econv1, econv2, econv3):
-        x = F.relu(self.conv4(x))
-        x = F.relu(self.conv3(torch.cat([x, econv3], dim=1)))
-        x = F.relu(self.conv2(torch.cat([x, econv2], dim=1)))
-        img = self.conv1(torch.cat([x, econv1], dim=1))
+        x = F.relu(self.bn4(self.conv4(x)))
+        x = F.relu(self.bn3(self.conv3(torch.cat([x, econv3], dim=1))))
+        x = F.relu(self.bn2(self.conv2(torch.cat([x, econv2], dim=1))))
+        img = F.tanh(self.conv1(torch.cat([x, econv1], dim=1)))
         return img
 
 
@@ -58,13 +63,16 @@ class Discriminator(nn.Module):
 
         self.model = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(c),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(c*2),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(c*3),
             nn.LeakyReLU(0.2, inplace=True),
         )
-        self.fc1 = nn.Linear(2*c*32*56, latent_dims)
+        self.fc1 = nn.Linear(3*c*32*56, latent_dims)
         self.fc2 = nn.Linear(latent_dims, 1)
         self.sigmoid = nn.Sigmoid()
 

@@ -46,8 +46,8 @@ if __name__ == '__main__':
     discriminator = discriminator.to(device)
     g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    mse_loss = torch.nn.MSELoss()
-    mse_loss.to(device)
+    l1_loss = torch.nn.L1Loss()
+    l1_loss.to(device)
     bce_loss = torch.nn.BCELoss()
     bce_loss.to(device)
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
             # autoencoder training
             g_optimizer.zero_grad()
-            g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+            g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
             g_loss.backward()
             g_optimizer.step()
 
@@ -126,8 +126,6 @@ if __name__ == '__main__':
 
             autoencoder.eval()
             discriminator.eval()
-
-            # check val dataset
             print('Evaluating...')
             with torch.no_grad():
                 num_batches = 0
@@ -142,7 +140,7 @@ if __name__ == '__main__':
 
                     mid_recon = autoencoder(first, last, flow)
                     d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
-                    g_loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+                    g_loss = g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())

@@ -22,7 +22,8 @@ class VimeoDataset(Dataset):
         self.text_split = text_split
         if transform is None:
             self.transform = transforms.Compose([
-                transforms.ToTensor()
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
         self.middle_frame = []
         self.first_last_frames_flow = []
@@ -60,16 +61,17 @@ class VimeoDataset(Dataset):
         return sample
 
 
-def imshow(inp):
-    """Imshow for Tensor."""
+def convert_tensor_image(inp):
+    """Inverse image tensor with mean and std."""
     inp = inp.numpy().transpose((1, 2, 0))
-    # mean = np.array(means)
-    # std = np.array(stds)
-    # inp = std * inp + mean
+    mean = np.array([0.5, 0.5, 0.5])
+    std = np.array([0.5, 0.5, 0.5])
+    inp = std * inp + mean
     inp = np.clip(inp, 0, 1)
-    plt.imshow(inp)
-    plt.pause(0.001)
-    plt.show()
+    # plt.imshow(inp)
+    # plt.pause(0.001)
+    # plt.show()
+    return inp
 
 
 def get_optical_flow(first, last):
