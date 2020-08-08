@@ -10,6 +10,4 @@
 - [ ] Different image sizes?
 - [X] Saving statistics
 - [X] Plotting statistics
-- [X] Adversarial training
-- [ ] Perceptual loss
 - [X] Video maker

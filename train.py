@@ -13,7 +13,7 @@ import time
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--channels', default=64, type=int)
-    parser.add_argument('--num_epochs', default=150, type=int)
+    parser.add_argument('--num_epochs', default=50, type=int)
     parser.add_argument('--lr', default=2e-4, type=float)
     parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
@@ -47,8 +47,8 @@ if __name__ == '__main__':
     # discriminator = discriminator.to(device)
     g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, betas=(0.5, 0.999))
     # d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr,betas=(0.5, 0.999))
-    l1_loss = torch.nn.L1Loss()
-    l1_loss.to(device)
+    mse_loss = torch.nn.MSELoss()
+    mse_loss.to(device)
     # bce_loss = torch.nn.BCELoss()
     # bce_loss.to(device)
 
@@ -110,7 +110,7 @@ if __name__ == '__main__':
             # autoencoder training
             g_optimizer.zero_grad()
             # g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-            g_loss = l1_loss(mid, mid_recon)
+            g_loss = mse_loss(mid, mid_recon)
             g_loss.backward()
             g_optimizer.step()
 
@@ -165,7 +165,7 @@ if __name__ == '__main__':
                     mid_recon = autoencoder(first, last, flow)
                     # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
                     # g_loss = g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-                    g_loss = l1_loss(mid, mid_recon)
+                    g_loss = mse_loss(mid, mid_recon)
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
