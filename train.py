@@ -181,7 +181,7 @@ if __name__ == '__main__':
                         if num_batches == 1 or num_batches % args.time_check_every == 0:
                             batches_left = val_batches - num_batches
                             print('Evaluating at Epoch [{} / {}] {} seconds for {} / {} batches of {} left'.format(epoch+1, args.num_epochs, 
-                                time_taken * len(valloader), batches_left, val_batches, mid.shape[0]))
+                                time_taken * batches_left, batches_left, val_batches, mid.shape[0]))
 
                 val_loss[-1][0] /= num_batches
                 val_loss[-1][1] /= num_batches
