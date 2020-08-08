@@ -81,7 +81,10 @@ if __name__ == '__main__':
         
         autoencoder.train()
         discriminator.train()
+
+        # for time calculations
         start_time = time.time()
+        
         for i in trainloader:
             # load data
             first = i['first_last_frames_flow'][0]
@@ -116,11 +119,15 @@ if __name__ == '__main__':
                 if num_batches == np.ceil(float(args.max_num_images) / args.batch_size):
                     break
 
+            # time calculations
             if args.time_it:
                 time_now = time.time()
                 time_taken = time_now - start_time
                 start_time = time_now
-                train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
+                if args.max_num_images is not None:
+                    train_batches = int(np.ceil(float(args.max_num_images) / args.batch_size))
+                else:
+                    train_batches = len(trainloader)
                 print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds per epoch for {} batches'.format(epoch+1, args.num_epochs, mid.shape[0], 
                     time_taken, time_taken * train_batches, train_batches))
 
@@ -144,8 +151,11 @@ if __name__ == '__main__':
                     last = i['first_last_frames_flow'][1]
                     flow = i['first_last_frames_flow'][2]
                     mid = i['middle_frame']
+
+                    # print evaluation time
                     if num_batches == 0:
                         print('Evaluating for {} batches of {}, estimated time: {} seconds'.format(len(valloader), mid.shape[0], time_taken * len(valloader)))
+                    
                     first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
                     valid = torch.ones(mid.shape[0], 1).to(device)
                     fake = torch.zeros(mid.shape[0], 1).to(device)
