@@ -3,3 +3,5 @@ __pycache__/*
 *.jpg
 *.png
 vimeo-90k/*
+/weights
+/results

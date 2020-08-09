@@ -9,19 +9,16 @@ import os
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
     parser.add_argument('--saved_model_path', type=str, required=True)
     args = parser.parse_args()
 
     # instantiate setup
-    device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = torch.load(args.saved_model_path, map_location=torch.device(device))
     model = model.to(device)
     model.eval()
-    mse_loss = torch.nn.MSELoss()
-    mse_loss.to(device)
 
     # build dataloaders
     print('Building test dataloader...')
@@ -38,8 +35,8 @@ if __name__ == '__main__':
         for i in testloader:
             num_batches = 0
             for i in testloader:
-                first = i['first_last_frames_flow'][0]
-                last = i['first_last_frames_flow'][1]
+                first = i['first_last_frames'][0]
+                last = i['first_last_frames'][1]
                 mid = i['middle_frame']
                 first, last, mid = first.to(device), last.to(device), mid.to(device)
 

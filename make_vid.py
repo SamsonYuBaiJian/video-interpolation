@@ -7,47 +7,43 @@ import time
 import cv2
 import argparse
 import os
+from model import RRIN
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--vimeo_seq_dir', required=True)
+    parser.add_argument('--frames_path', required=True)
     parser.add_argument('--save_vid_dir', required=True)
     parser.add_argument('--saved_model_path', required=True)
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = torch.load(args.saved_model_path, map_location=torch.device(device))
+    model = RRIN()
+    checkpoint = torch.load(args.saved_model_path, map_location=torch.device(device))
+    model.load_state_dict(checkpoint, strict=True)
     model.eval()
     
     transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        transforms.ToTensor()
     ])
 
-    sequences = sorted(os.listdir(args.vimeo_seq_dir))
-    for i in range(len(sequences)):
-        # if i % 2 == 0:
-        path = os.path.join(args.vimeo_seq_dir, sequences[i])
-        # flow = get_optical_flow(path + '/im1.png', path + '/im3.png')
-        first = PIL.Image.open(path + '/im1.png')
-        last = PIL.Image.open(path + '/im3.png')
-        # flow = PIL.Image.fromarray(flow)
+    frames = sorted(os.listdir(args.frames_path))
+    for i in range(len(frames)):
+        if i % 2 == 0:
+            first_path = os.path.join(args.frames_path, frames[i])
+            last_path = os.path.join(args.frames_path, frames[i+2])
+            first = PIL.Image.open(first_path)
+            last = PIL.Image.open(last_path)
 
-        first = transforms(first)
-        last = transforms(last)
-        # flow = transforms(flow)
+            first = transforms(first)
+            last = transforms(last)
 
-        with torch.no_grad():
-            img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
-        
-        img_recon = img_recon.squeeze(0)
-        img_recon = img_recon.numpy().transpose((1, 2, 0))
-        mean = np.array([0.5, 0.5, 0.5])
-        std = np.array([0.5, 0.5, 0.5])
-        img_recon = std * img_recon + mean
-        img_recon = np.clip(img_recon, 0, 1)
+            with torch.no_grad():
+                img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
+            
+            img_recon = img_recon.squeeze(0)
+            img_recon = img_recon.numpy().transpose((1, 2, 0))
+            first = first.numpy().transpose((1, 2, 0))
 
-        # PIL.Image.fromarray((first.numpy().transpose((1, 2, 0)) * 255).astype(np.uint8)).save("{}/{}.png".format(args.save_vid_dir, cnt))
-        PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/{}.png".format(args.save_vid_dir, i))
-        # PIL.Image.fromarray((last.numpy().transpose((1, 2, 0)) * 255).astype(np.uint8)).save("{}/{}.png".format(args.save_vid_dir, i + 2))
+            PIL.Image.fromarray((first * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i))
+            PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i + 1))

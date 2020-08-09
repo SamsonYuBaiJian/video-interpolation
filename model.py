@@ -89,57 +89,55 @@ class UNetUpBlock(nn.Module):
         return out
 
 
+def warp(img, flow):
+    _, _, H, W = img.size()
+    gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
+    gridX = torch.tensor(gridX, requires_grad=False).to(device)
+    gridY = torch.tensor(gridY, requires_grad=False).to(device)
+    u = flow[:,0,:,:]
+    v = flow[:,1,:,:]
+    x = gridX.unsqueeze(0).expand_as(u).float()+u
+    y = gridY.unsqueeze(0).expand_as(v).float()+v
+    normx = 2*(x/W-0.5)
+    normy = 2*(y/H-0.5)
+    grid = torch.stack((normx,normy), dim=3)
+    warped = F.grid_sample(img, grid, align_corners=True)
+    return warped
+
+
 class RRIN(nn.Module):
-    def __init__(self):
+    def __init__(self,level=3):
         super(RRIN, self).__init__()
-        self.first_flow = UNet(6,4,5)
+        self.Mask = UNet(16,2,4)
+        self.Flow_L = UNet(6,4,5)
         self.refine_flow = UNet(10,4,4)
-        self.weight_map = UNet(16,2,4)
         self.final = UNet(9,3,4)
 
-    def warp(self, img, flow):
-        _, _, H, W = img.size()
-        gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
-        gridX = torch.tensor(gridX, requires_grad=False).to(device)
-        gridY = torch.tensor(gridY, requires_grad=False).to(device)
-        u = flow[:,0,:,:]
-        v = flow[:,1,:,:]
-        x = gridX.unsqueeze(0).expand_as(u).float() + u
-        y = gridY.unsqueeze(0).expand_as(v).float() + v
-        normx = 2*(x / W - 0.5)
-        normy = 2*(y / H - 0.5)
-        grid = torch.stack((normx, normy), dim=3)
-        warped = F.grid_sample(img, grid, align_corners=True)
+    def process(self,x0,x1,t):
 
-        return warped
-
-    def process(self, frame0, frame1, t):
-        # get bidrectional flow
-        x = torch.cat((frame0, frame1), 1)
-        flow = self.first_flow(x)
-        flow_0_1, flow_1_0 = flow[:,:2,:,:], flow[:,2:4,:,:]
-        flow_t_0 = -(1-t) * t * flow_0_1 + t * t * flow_1_0
-        flow_t_1 = (1-t) * (1-t) * flow_0_1 - t * (1-t) * flow_1_0
-        # refine flow
-        flow_t = torch.cat((flow_t_0, flow_t_1, x), 1)
-        flow_t = self.refine_flow(flow_t)
-        # warping
-        flow_t_0 = flow_t_0 + flow_t[:,:2,:,:]
-        flow_t_1 = flow_t_1 + flow_t[:,2:4,:,:]
-        xt1 = self.warp(frame0, flow_t_0)
-        xt2 = self.warp(frame1, flow_t_1)
-        # get weight map
-        temp = torch.cat((flow_t_0, flow_t_1, x, xt1, xt2), 1)
-        mask = torch.sigmoid(self.weight_map(temp))
-        w1, w2 = (1-t) * mask[:,0:1,:,:], t * mask[:,1:2,:,:]
-        output = (w1 * xt1 + w2 * xt2) / (w1 + w2 + 1e-8)
+        x = torch.cat((x0,x1),1)
+        Flow = self.Flow_L(x)
+        Flow_0_1, Flow_1_0 = Flow[:,:2,:,:], Flow[:,2:4,:,:]
+        Flow_t_0 = -(1-t)*t*Flow_0_1+t*t*Flow_1_0
+        Flow_t_1 = (1-t)*(1-t)*Flow_0_1-t*(1-t)*Flow_1_0
+        Flow_t = torch.cat((Flow_t_0,Flow_t_1,x),1)
+        Flow_t = self.refine_flow(Flow_t)
+        Flow_t_0 = Flow_t_0+Flow_t[:,:2,:,:]
+        Flow_t_1 = Flow_t_1+Flow_t[:,2:4,:,:]
+        xt1 = warp(x0,Flow_t_0)
+        xt2 = warp(x1,Flow_t_1)
+        temp = torch.cat((Flow_t_0,Flow_t_1,x,xt1,xt2),1)
+        Mask = torch.sigmoid(self.Mask(temp))
+        w1, w2 = (1-t)*Mask[:,0:1,:,:], t*Mask[:,1:2,:,:]
+        output = (w1*xt1+w2*xt2)/(w1+w2+1e-8)
 
         return output
-    
-    def forward(self, frame0, frame1, t=0.5):
-        output = self.process(frame0, frame1, t)
-        compose = torch.cat((frame0, frame1, output), 1)
-        final = self.final(compose) + output
+
+    def forward(self, input0, input1, t=0.5):
+
+        output = self.process(input0,input1,t)
+        compose = torch.cat((input0, input1, output),1)
+        final = self.final(compose)+output
         final = final.clamp(0,1)
 
         return final

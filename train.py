@@ -1,13 +1,26 @@
 from model import Net, RRIN, Discriminator
 import torch
 from torch.utils.data import DataLoader, Dataset
-from utils import VimeoDataset, save_stats, get_psnr
+from utils import VimeoDataset, get_psnr
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from datetime import datetime
 import os
 import time
+import pickle
+
+
+def save_stats(save_dir, exp_time, hyperparams, stats):
+    save_path = os.path.join(save_dir, exp_time)
+    os.makedirs(save_path, exist_ok=True)
+    if not os.path.exists(os.path.join(save_path, 'hyperparams.pickle')):
+        with open(os.path.join(save_path, 'hyperparams.pickle'), 'wb') as handle:
+            pickle.dump(hyperparams, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            handle.close()
+    with open(os.path.join(save_path, 'stats.pickle'), 'wb') as handle:
+        pickle.dump(stats, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        handle.close()
 
 
 if __name__ == '__main__':
@@ -38,17 +51,16 @@ if __name__ == '__main__':
 
     # instantiate setup
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # model = Net()
-    model = RRIN()
+    model = Net()
     model = model.to(device)
-    # discriminator = Discriminator()
-    # discriminator = discriminator.to(device)
+    discriminator = Discriminator()
+    discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
-    # d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr)
+    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr)
     mse_loss = torch.nn.MSELoss()
     mse_loss.to(device)
-    # bce_loss = torch.nn.BCELoss()
-    # bce_loss.to(device)
+    bce_loss = torch.nn.BCELoss()
+    bce_loss.to(device)
 
     # to store evaluation metrics
     train_loss = []
@@ -77,7 +89,7 @@ if __name__ == '__main__':
         train_loss_epoch = [0, 0]
         
         model.train()
-        # discriminator.train()
+        discriminator.train()
 
         # for time calculations
         start_time = time.time()
@@ -90,28 +102,29 @@ if __name__ == '__main__':
             # load data
             first = i['first_last_frames'][0]
             last = i['first_last_frames'][1]
-            # flow = i['flow']
             mid = i['middle_frame']
             first, last, mid = first.to(device), last.to(device), mid.to(device)
-            # valid = torch.ones(mid_recon.shape[0], 1).to(device)
-            # fake = torch.zeros(mid_recon.shape[0], 1).to(device)
+            valid = torch.ones(mid_recon.shape[0], 1).to(device)
+            fake = torch.zeros(mid_recon.shape[0], 1).to(device)
 
             mid_recon = model(first, last)
 
-            # d_optimizer.zero_grad()
-            # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
-            # d_loss.backward(retain_graph=True)
-            # d_optimizer.step()
+            # discriminator training
+            d_optimizer.zero_grad()
+            d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
+            d_loss.backward(retain_graph=True)
+            d_optimizer.step()
 
+            # custom RRIN training
             optimizer.zero_grad()
-            # loss =  0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+            loss =  0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
             loss = mse_loss(mid, mid_recon)
             loss.backward()
             optimizer.step()
 
             # store stats       
             train_loss_epoch[0] += loss.item()
-            # train_loss_epoch[1] += d_loss.item()
+            train_loss_epoch[1] += d_loss.item()
             num_batches += 1
 
             if args.max_num_images is not None:
@@ -140,7 +153,7 @@ if __name__ == '__main__':
             train_loss[-1] = train_loss_epoch
 
             model.eval()
-            # discriminator.eval()
+            discriminator.eval()
 
             start_time = time.time()
             val_batches = len(valloader)
@@ -157,14 +170,14 @@ if __name__ == '__main__':
                     fake = torch.zeros(mid.shape[0], 1).to(device)
 
                     mid_recon = model(first, last)
-                    # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
-                    # loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+                    d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
+                    loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
                     loss = mse_loss(mid, mid_recon)
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
                     val_loss[-1][0] += loss.item()
-                    # val_loss[-1][0] += d_loss.item()
+                    val_loss[-1][1] += d_loss.item()
                     num_batches += 1
 
                     # val time calculations
