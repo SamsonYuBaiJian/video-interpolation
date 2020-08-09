@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torchvision
 import time
-from utils import get_optical_flow
 import cv2
 import argparse
 import os
@@ -18,8 +17,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    autoencoder = torch.load(args.saved_model_path, map_location=torch.device(device))
-    autoencoder.eval()
+    model = torch.load(args.saved_model_path, map_location=torch.device(device))
+    model.eval()
     
     transforms = transforms.Compose([
         transforms.ToTensor(),
@@ -32,17 +31,17 @@ if __name__ == '__main__':
     for i in range(len(sequences)):
         # if i % 2 == 0:
         path = os.path.join(args.vimeo_seq_dir, sequences[i])
-        flow = get_optical_flow(path + '/im1.png', path + '/im3.png')
+        # flow = get_optical_flow(path + '/im1.png', path + '/im3.png')
         first = PIL.Image.open(path + '/im1.png')
         last = PIL.Image.open(path + '/im3.png')
-        flow = PIL.Image.fromarray(flow)
+        # flow = PIL.Image.fromarray(flow)
 
         first = transforms(first)
         last = transforms(last)
-        flow = transforms(flow)
+        # flow = transforms(flow)
 
         with torch.no_grad():
-            img_recon = autoencoder(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device), flow.unsqueeze(0).to(device))
+            img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
         
         img_recon = img_recon.squeeze(0)
         img_recon = img_recon.numpy().transpose((1, 2, 0))

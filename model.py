@@ -132,10 +132,6 @@ class RRIN(nn.Module):
         w1, w2 = (1-t) * mask[:,0:1,:,:], t * mask[:,1:2,:,:]
         output = (w1 * xt1 + w2 * xt2) / (w1 + w2 + 1e-8)
 
-        # return output
-        output = torch.cat((flow_t_0, flow_t_1, x, xt1, xt2), 1)
-        output = self.custom_final(output)
-
         return output
     
     def forward(self, frame0, frame1, t=0.5):
