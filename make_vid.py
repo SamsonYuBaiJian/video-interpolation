@@ -25,8 +25,6 @@ if __name__ == '__main__':
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
-    multiple = 1
-    cnt = 0
     sequences = sorted(os.listdir(args.vimeo_seq_dir))
     for i in range(len(sequences)):
         # if i % 2 == 0:

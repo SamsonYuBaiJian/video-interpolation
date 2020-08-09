@@ -107,7 +107,7 @@ class RRIN(nn.Module):
         normx = 2*(x / W - 0.5)
         normy = 2*(y / H - 0.5)
         grid = torch.stack((normx, normy), dim=3)
-        warped = F.grid_sample(img, grid)
+        warped = F.grid_sample(img, grid, align_corners=True)
 
         return warped
 
