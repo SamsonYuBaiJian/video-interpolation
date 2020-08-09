@@ -42,8 +42,8 @@ if __name__ == '__main__':
     model = Net()
     model = model.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
-    loss = torch.nn.L1Loss()
-    loss.to(device)
+    criterion = torch.nn.L1Loss()
+    criterion.to(device)
 
     # to store evaluation metrics
     train_loss = []
@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
             mid_recon = model(first, last)
             optimizer.zero_grad()
-            loss = loss(mid, mid_recon)
+            loss = criterion(mid, mid_recon)
             loss.backward()
             optimizer.step()
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
                     first, last, mid = first.to(device), last.to(device), mid.to(device)
 
                     mid_recon = model(first, last)
-                    loss = loss(mid, mid_recon)
+                    loss = criterion(mid, mid_recon)
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())

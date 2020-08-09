@@ -128,7 +128,7 @@ class Net(nn.Module):
         xt2 = self.warp(frame1, flow_t_1)
         # get weight map
         temp = torch.cat((flow_t_0, flow_t_1, x, xt1, xt2),1)
-        mask = F.sigmoid(self.weight_map(temp))
+        mask = torch.sigmoid(self.weight_map(temp))
         w1, w2 = (1-t) * mask[:,0:1,:,:], t * mask[:,1:2,:,:]
         output = (w1 * xt1 + w2 * xt2) / (w1 + w2 + 1e-8)
 
