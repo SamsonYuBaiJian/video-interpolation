@@ -18,9 +18,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = RRIN()
-    checkpoint = torch.load(args.saved_model_path, map_location=torch.device(device))
-    model.load_state_dict(checkpoint, strict=True)
+    # model = RRIN()
+    # checkpoint = torch.load(args.saved_model_path, map_location=torch.device(device))
+    # model.load_state_dict(checkpoint, strict=True)
+    model = torch.load(args.saved_model_path, map_location=torch.device(device))
     model.eval()
     
     transforms = transforms.Compose([

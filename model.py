@@ -148,9 +148,8 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.first_flow = UNet(6,4,4)
         # self.refine_flow = UNet(10,4,4)
-        # self.weight_map = UNet(16,2,4)
+        self.weight_map = UNet(16,2,4)
         # self.final = UNet(9,3,4)
-        self.custom_final = UNet(16,3,4)
 
     def warp(self, img, flow):
         _, _, H, W = img.size()
@@ -186,25 +185,20 @@ class Net(nn.Module):
         xt1 = self.warp(frame0, flow_t_0)
         xt2 = self.warp(frame1, flow_t_1)
         # get weight map
-        # temp = torch.cat((flow_t_0, flow_t_1, x, xt1, xt2), 1)
-        # mask = torch.sigmoid(self.weight_map(temp))
-        # w1, w2 = (1-t) * mask[:,0:1,:,:], t * mask[:,1:2,:,:]
-        # output = (w1 * xt1 + w2 * xt2) / (w1 + w2 + 1e-8)
-
-        # return output
-        output = torch.cat((flow_t_0, flow_t_1, x, xt1, xt2), 1)
-        output = self.custom_final(output)
+        temp = torch.cat((flow_t_0, flow_t_1, x, xt1, xt2), 1)
+        mask = torch.sigmoid(self.weight_map(temp))
+        w1, w2 = (1-t) * mask[:,0:1,:,:], t * mask[:,1:2,:,:]
+        output = (w1 * xt1 + w2 * xt2) / (w1 + w2 + 1e-8)
 
         return output
     
     def forward(self, frame0, frame1, t=0.5):
-        # output = self.process(frame0, frame1, t)
+        output = self.process(frame0, frame1, t)
         # compose = torch.cat((frame0, frame1, output), 1)
         # final = self.final(compose) + output
-        final = self.process(frame0, frame1, t)
         # final = final.clamp(0,1)
 
-        return final
+        return output
 
 
 class Discriminator(nn.Module):
