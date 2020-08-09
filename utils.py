@@ -43,8 +43,8 @@ class VimeoDataset(Dataset):
                 continue
             frames = sorted(frames)
             if len(frames) == 3:
-                self.first_last_frames.append([frames[1], frames[3]])
-                self.middle_frame.append(frames[2])
+                self.first_last_frames.append([frames[0], frames[2]])
+                self.middle_frame.append(frames[1])
                 # self.flow.append(frames[0])
 
     def __len__(self):

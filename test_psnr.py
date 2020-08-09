@@ -17,9 +17,9 @@ if __name__ == '__main__':
 
     # instantiate setup
     device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
-    autoencoder = torch.load(args.saved_model_path, map_location=torch.device(device))
-    autoencoder = autoencoder.to(device)
-    autoencoder.eval()
+    model = torch.load(args.saved_model_path, map_location=torch.device(device))
+    model = model.to(device)
+    model.eval()
     mse_loss = torch.nn.MSELoss()
     mse_loss.to(device)
 
@@ -40,11 +40,10 @@ if __name__ == '__main__':
             for i in testloader:
                 first = i['first_last_frames_flow'][0]
                 last = i['first_last_frames_flow'][1]
-                flow = i['first_last_frames_flow'][2]
                 mid = i['middle_frame']
-                first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
+                first, last, mid = first.to(device), last.to(device), mid.to(device)
 
-                mid_recon = autoencoder(first, last, flow)
+                mid_recon = model(first, last)
 
                 psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
                 num_batches += 1
