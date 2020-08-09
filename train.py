@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
     parser.add_argument('--save_stats_path', type=str, required=True)
-    parser.add_argument('--eval_every', default=5, type=int)
+    parser.add_argument('--eval_every', default=1, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
     parser.add_argument('--latent_dims', default=512, type=int)
@@ -49,8 +49,8 @@ if __name__ == '__main__':
     # discriminator = discriminator.to(device)
     g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     # d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr,betas=(0.5, 0.999))
-    mse_loss = torch.nn.MSELoss()
-    mse_loss.to(device)
+    loss = torch.nn.L1Loss()
+    loss.to(device)
     # bce_loss = torch.nn.BCELoss()
     # bce_loss.to(device)
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
             # autoencoder training
             g_optimizer.zero_grad()
             # g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-            g_loss = mse_loss(mid, mid_recon)
+            g_loss = loss(mid, mid_recon)
             g_loss.backward()
             g_optimizer.step()
 
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                     mid_recon = autoencoder(first, last, flow)
                     # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
                     # g_loss = g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-                    g_loss = mse_loss(mid, mid_recon)
+                    g_loss = loss(mid, mid_recon)
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
