@@ -15,7 +15,6 @@ if __name__ == '__main__':
     parser.add_argument('--channels', default=64, type=int)
     parser.add_argument('--num_epochs', default=50, type=int)
     parser.add_argument('--lr', default=1e-4, type=float)
-    parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
     parser.add_argument('--save_stats_path', type=str, required=True)
@@ -38,7 +37,7 @@ if __name__ == '__main__':
     }
 
     # instantiate setup
-    device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # model = Net()
     model = RRIN()
     model = model.to(device)

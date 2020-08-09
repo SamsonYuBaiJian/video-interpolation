@@ -5,6 +5,8 @@ import torchvision.models as models
 import numpy as np
 
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 class UNet(nn.Module):
     def __init__(self, in_channels=1, n_classes=2, depth=5, filter_num=5, padding=True,):
         super(UNet, self).__init__()
