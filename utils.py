@@ -48,7 +48,7 @@ class VimeoDataset(Dataset):
                 self.flow.append(frames[0])
 
     def __len__(self):
-        return len(self.first_last_frames_flow)
+        return len(self.first_last_frames)
 
     def __getitem__(self, idx):
         first_last = [PIL.Image.open(self.first_last_frames[idx][0]).convert("RGB"), PIL.Image.open(self.first_last_frames[idx][1]).convert("RGB")]
