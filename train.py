@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
     # d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr)
-    mse_loss = torch.nn.L1Loss()
+    mse_loss = torch.nn.MSELoss()
     mse_loss.to(device)
     # bce_loss = torch.nn.BCELoss()
     # bce_loss.to(device)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
             optimizer.step()
 
             # store stats       
-            train_loss_epoch[0] += mse_loss.item()
+            train_loss_epoch[0] += loss.item()
             # train_loss_epoch[1] += d_loss.item()
             num_batches += 1
 
@@ -164,7 +164,7 @@ if __name__ == '__main__':
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
-                    val_loss[-1][0] += mse_loss.item()
+                    val_loss[-1][0] += loss.item()
                     # val_loss[-1][0] += d_loss.item()
                     num_batches += 1
 
