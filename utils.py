@@ -41,6 +41,7 @@ class VimeoDataset(Dataset):
             except:
                 continue
             frames = sorted(frames)
+            print(frames)
             if len(frames) == 4:
                 self.first_last_frames_flow.append([frames[1], frames[3], frames[0]])
                 self.middle_frame.append(frames[2])

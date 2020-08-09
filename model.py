@@ -81,7 +81,7 @@ class Decoder(nn.Module):
         x = F.relu(self.conv4(torch.cat([x, econv4], dim=1)))
         x = F.relu(self.conv3(torch.cat([x, econv3], dim=1)))
         x = F.relu(self.conv2(torch.cat([x, econv2], dim=1)))
-        img = torch.tanh(self.conv1(torch.cat([x, econv1], dim=1)))
+        img = self.conv1(torch.cat([x, econv1], dim=1))
         return img
 
 
