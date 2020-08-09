@@ -98,8 +98,8 @@ class RRIN(nn.Module):
     def warp(self, img, flow):
         _, _, H, W = img.size()
         gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
-        gridX = torch.tensor(gridX, requires_grad=False).cuda()
-        gridY = torch.tensor(gridY, requires_grad=False).cuda()
+        gridX = torch.tensor(gridX, requires_grad=False)
+        gridY = torch.tensor(gridY, requires_grad=False)
         u = flow[:,0,:,:]
         v = flow[:,1,:,:]
         x = gridX.unsqueeze(0).expand_as(u).float() + u
@@ -155,8 +155,10 @@ class Net(nn.Module):
     def warp(self, img, flow):
         _, _, H, W = img.size()
         gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
-        gridX = torch.tensor(gridX, requires_grad=False).cuda()
-        gridY = torch.tensor(gridY, requires_grad=False).cuda()
+        # gridX = torch.tensor(gridX, requires_grad=False).cuda()
+        # gridY = torch.tensor(gridY, requires_grad=False).cuda()
+        gridX = torch.tensor(gridX, requires_grad=False)
+        gridY = torch.tensor(gridY, requires_grad=False)
         u = flow[:,0,:,:]
         v = flow[:,1,:,:]
         x = gridX.unsqueeze(0).expand_as(u).float() + u
@@ -164,7 +166,7 @@ class Net(nn.Module):
         normx = 2*(x / W - 0.5)
         normy = 2*(y / H - 0.5)
         grid = torch.stack((normx, normy), dim=3)
-        warped = F.grid_sample(img, grid)
+        warped = F.grid_sample(img, grid, align_corners=True)
 
         return warped
 

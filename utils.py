@@ -42,10 +42,10 @@ class VimeoDataset(Dataset):
             except:
                 continue
             frames = sorted(frames)
-            if len(frames) == 4:
+            if len(frames) == 3:
                 self.first_last_frames.append([frames[1], frames[3]])
                 self.middle_frame.append(frames[2])
-                self.flow.append(frames[0])
+                # self.flow.append(frames[0])
 
     def __len__(self):
         return len(self.first_last_frames)
@@ -53,14 +53,15 @@ class VimeoDataset(Dataset):
     def __getitem__(self, idx):
         first_last = [PIL.Image.open(self.first_last_frames[idx][0]).convert("RGB"), PIL.Image.open(self.first_last_frames[idx][1]).convert("RGB")]
         mid = PIL.Image.open(self.middle_frame[idx]).convert("RGB")
-        flow = PIL.Image.open(self.flow[idx]).convert("RGB")
+        # flow = PIL.Image.open(self.flow[idx]).convert("RGB")
 
         if self.transform:
             first_last = [self.transform(first_last[0]), self.transform(first_last[1])]
             mid = self.transform(mid)
-            flow = self.transform(flow)
+            # flow = self.transform(flow)
 
-        sample = {'first_last_frames': first_last, 'middle_frame': mid, 'flow': flow}
+        # sample = {'first_last_frames': first_last, 'middle_frame': mid, 'flow': flow}
+        sample = {'first_last_frames': first_last, 'middle_frame': mid}
 
         return sample
 
