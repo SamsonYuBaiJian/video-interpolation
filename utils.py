@@ -26,7 +26,8 @@ class VimeoDataset(Dataset):
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
         self.middle_frame = []
-        self.first_last_frames_flow = []
+        self.first_last_frames = []
+        self.flow = []
 
         with open(self.text_split, 'r') as f:
             filenames = f.readlines()
@@ -42,21 +43,24 @@ class VimeoDataset(Dataset):
                 continue
             frames = sorted(frames)
             if len(frames) == 4:
-                self.first_last_frames_flow.append([frames[1], frames[3], frames[0]])
+                self.first_last_frames.append([frames[1], frames[3]])
                 self.middle_frame.append(frames[2])
+                self.flow.append(frames[0])
 
     def __len__(self):
         return len(self.first_last_frames_flow)
 
     def __getitem__(self, idx):
-        first_last_flow = [PIL.Image.open(self.first_last_frames_flow[idx][0]).convert("RGB"), PIL.Image.open(self.first_last_frames_flow[idx][1]).convert("RGB"), PIL.Image.open(self.first_last_frames_flow[idx][2]).convert("RGB")]
+        first_last = [PIL.Image.open(self.first_last_frames[idx][0]).convert("RGB"), PIL.Image.open(self.first_last_frames[idx][1]).convert("RGB")]
         mid = PIL.Image.open(self.middle_frame[idx]).convert("RGB")
+        flow = PIL.Image.open(self.flow[idx]).convert("RGB")
 
         if self.transform:
-            first_last_flow = [self.transform(first_last_flow[0]), self.transform(first_last_flow[1]), self.transform(first_last_flow[2])]
+            first_last = [self.transform(first_last[0]), self.transform(first_last[1])]
             mid = self.transform(mid)
+            flow = self.transform(flow)
 
-        sample = {'first_last_frames_flow': first_last_flow, 'middle_frame': mid}
+        sample = {'first_last_frames': first_last, 'middle_frame': mid, 'flow': flow}
 
         return sample
 
@@ -80,27 +84,27 @@ def get_optical_flow(first, last):
     return bgr
 
 
-def save_optical_flow(video_dir, text_split):
-    """
-    Args:
-        video_dir (string): Vimeo-90k sequences directory.
-    """
-    with open(text_split, 'r') as f:
-        filenames = f.readlines()
-        f.close()
-    final_filenames = []
-    for i in filenames:
-        final_filenames.append(os.path.join(video_dir, i.split('\n')[0]))
+# def save_optical_flow(video_dir, text_split):
+#     """
+#     Args:
+#         video_dir (string): Vimeo-90k sequences directory.
+#     """
+#     with open(text_split, 'r') as f:
+#         filenames = f.readlines()
+#         f.close()
+#     final_filenames = []
+#     for i in filenames:
+#         final_filenames.append(os.path.join(video_dir, i.split('\n')[0]))
 
-    for f in final_filenames:
-        try:
-            frames = [os.path.join(f, i) for i in os.listdir(f)]
-        except:
-            continue
-        frames = sorted(frames)
-        if len(frames) == 3:
-            bgr = get_optical_flow(frames[0], frames[2])
-            cv2.imwrite(os.path.join('/'.join(frames[0].split('/')[:-1]),'flow.png'), bgr)
+#     for f in final_filenames:
+#         try:
+#             frames = [os.path.join(f, i) for i in os.listdir(f)]
+#         except:
+#             continue
+#         frames = sorted(frames)
+#         if len(frames) == 3:
+#             bgr = get_optical_flow(frames[0], frames[2])
+#             cv2.imwrite(os.path.join('/'.join(frames[0].split('/')[:-1]),'flow.png'), bgr)
 
 
 def save_stats(save_dir, exp_time, hyperparams, stats):

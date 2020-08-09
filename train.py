@@ -1,4 +1,4 @@
-from model import Autoencoder #, Discriminator
+from model import Net
 import torch
 from torch.utils.data import DataLoader, Dataset
 from utils import VimeoDataset, save_stats, get_psnr
@@ -15,7 +15,6 @@ if __name__ == '__main__':
     parser.add_argument('--channels', default=64, type=int)
     parser.add_argument('--num_epochs', default=50, type=int)
     parser.add_argument('--lr', default=1e-4, type=float)
-    parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--use_gpu', default=True)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
@@ -23,7 +22,6 @@ if __name__ == '__main__':
     parser.add_argument('--eval_every', default=1, type=int)
     parser.add_argument('--max_num_images', default=None)
     parser.add_argument('--save_model_path', default='./model.pt', required=True)
-    parser.add_argument('--latent_dims', default=512, type=int)
     parser.add_argument('--time_it', action='store_true')
     parser.add_argument('--time_check_every', default=20, type=int)
     args = parser.parse_args()
@@ -35,24 +33,17 @@ if __name__ == '__main__':
         'num_epochs': args.num_epochs,
         'lr': args.lr,
         'batch_size': args.batch_size,
-        'weight_decay': args.weight_decay,
         'eval_every': args.eval_every,
-        'max_num_images': args.max_num_images,
-        'latent_dims': args.latent_dims,
+        'max_num_images': args.max_num_images
     }
 
     # instantiate setup
     device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
-    autoencoder = Autoencoder(args.channels, args.latent_dims)
-    autoencoder = autoencoder.to(device)
-    # discriminator = Discriminator(args.channels, args.latent_dims)
-    # discriminator = discriminator.to(device)
-    g_optimizer = torch.optim.Adam(params=autoencoder.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    # d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr,betas=(0.5, 0.999))
+    model = Net()
+    model = model.to(device)
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
     loss = torch.nn.L1Loss()
     loss.to(device)
-    # bce_loss = torch.nn.BCELoss()
-    # bce_loss.to(device)
 
     # to store evaluation metrics
     train_loss = []
@@ -80,8 +71,7 @@ if __name__ == '__main__':
         num_batches = 0
         train_loss_epoch = [0, 0]
         
-        autoencoder.train()
-        # discriminator.train()
+        model.train()
 
         # for time calculations
         start_time = time.time()
@@ -92,33 +82,20 @@ if __name__ == '__main__':
         
         for i in trainloader:
             # load data
-            first = i['first_last_frames_flow'][0]
-            last = i['first_last_frames_flow'][1]
-            flow = i['first_last_frames_flow'][2]
+            first = i['first_last_frames'][0]
+            last = i['first_last_frames'][1]
+            # flow = i['flow']
             mid = i['middle_frame']
-            first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-            # valid = torch.ones(mid.shape[0], 1).to(device)
-            # fake = torch.zeros(mid.shape[0], 1).to(device)
+            first, last, mid = first.to(device), last.to(device), mid.to(device)
 
-            # autoencoder prediction
-            mid_recon = autoencoder(first, last, flow)
-
-            # # discriminator training
-            # d_optimizer.zero_grad()
-            # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
-            # d_loss.backward(retain_graph=True)
-            # d_optimizer.step()
-
-            # autoencoder training
-            g_optimizer.zero_grad()
-            # g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-            g_loss = loss(mid, mid_recon)
-            g_loss.backward()
-            g_optimizer.step()
+            mid_recon = model(first, last)
+            optimizer.zero_grad()
+            loss = loss(mid, mid_recon)
+            loss.backward()
+            optimizer.step()
 
             # store stats       
-            train_loss_epoch[0] = g_loss.item()
-            # train_loss_epoch[1] = d_loss.item()
+            train_loss_epoch[0] = loss.item()
             num_batches += 1
 
             if args.max_num_images is not None:
@@ -146,8 +123,7 @@ if __name__ == '__main__':
             val_psnr = 0
             train_loss[-1] = train_loss_epoch
 
-            autoencoder.eval()
-            # discriminator.eval()
+            model.eval()
 
             start_time = time.time()
             val_batches = len(valloader)
@@ -155,24 +131,19 @@ if __name__ == '__main__':
             with torch.no_grad():
                 num_batches = 0
                 for i in valloader:
-                    first = i['first_last_frames_flow'][0]
-                    last = i['first_last_frames_flow'][1]
-                    flow = i['first_last_frames_flow'][2]
+                    first = i['first_last_frames'][0]
+                    last = i['first_last_frames'][1]
+                    # flow = i['flow']
                     mid = i['middle_frame']
                     
-                    first, last, flow, mid = first.to(device), last.to(device), flow.to(device), mid.to(device)
-                    # valid = torch.ones(mid.shape[0], 1).to(device)
-                    # fake = torch.zeros(mid.shape[0], 1).to(device)
+                    first, last, mid = first.to(device), last.to(device), mid.to(device)
 
-                    mid_recon = autoencoder(first, last, flow)
-                    # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
-                    # g_loss = g_loss = 0.999 * l1_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
-                    g_loss = loss(mid, mid_recon)
+                    mid_recon = model(first, last)
+                    loss = loss(mid, mid_recon)
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
-                    val_loss[-1][0] += g_loss.item()
-                    # val_loss[-1][1] += d_loss.item()
+                    val_loss[-1][0] += loss.item()
                     num_batches += 1
 
                     # val time calculations
@@ -193,7 +164,7 @@ if __name__ == '__main__':
                 # save best model
                 if val_psnr > current_best_val_psnr:
                     current_best_val_psnr = val_psnr
-                    torch.save(autoencoder, args.save_model_path)
+                    torch.save(model, args.save_model_path)
                     print("Saved new best model with val PSNR: {}!".format(val_psnr))
 
             # save statistics
