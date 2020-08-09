@@ -104,8 +104,8 @@ if __name__ == '__main__':
             last = i['first_last_frames'][1]
             mid = i['middle_frame']
             first, last, mid = first.to(device), last.to(device), mid.to(device)
-            valid = torch.ones(mid_recon.shape[0], 1).to(device)
-            fake = torch.zeros(mid_recon.shape[0], 1).to(device)
+            valid = torch.ones(mid.shape[0], 1).to(device)
+            fake = torch.zeros(mid.shape[0], 1).to(device)
 
             mid_recon = model(first, last)
 
