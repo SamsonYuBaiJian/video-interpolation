@@ -1,4 +1,4 @@
-from model import Net
+from model import Net, RRIN, Discriminator
 import torch
 from torch.utils.data import DataLoader, Dataset
 from utils import VimeoDataset, save_stats, get_psnr
@@ -39,11 +39,17 @@ if __name__ == '__main__':
 
     # instantiate setup
     device = torch.device("cuda:0" if args.use_gpu and torch.cuda.is_available() else "cpu")
-    model = Net()
+    # model = Net()
+    model = RRIN()
     model = model.to(device)
+    # discriminator = Discriminator()
+    # discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
-    criterion = torch.nn.L1Loss()
-    criterion.to(device)
+    # d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr)
+    mse_loss = torch.nn.L1Loss()
+    mse_loss.to(device)
+    # bce_loss = torch.nn.BCELoss()
+    # bce_loss.to(device)
 
     # to store evaluation metrics
     train_loss = []
@@ -72,6 +78,7 @@ if __name__ == '__main__':
         train_loss_epoch = [0, 0]
         
         model.train()
+        # discriminator.train()
 
         # for time calculations
         start_time = time.time()
@@ -87,15 +94,25 @@ if __name__ == '__main__':
             # flow = i['flow']
             mid = i['middle_frame']
             first, last, mid = first.to(device), last.to(device), mid.to(device)
+            # valid = torch.ones(mid_recon.shape[0], 1).to(device)
+            # fake = torch.zeros(mid_recon.shape[0], 1).to(device)
 
             mid_recon = model(first, last)
+
+            # d_optimizer.zero_grad()
+            # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
+            # d_loss.backward(retain_graph=True)
+            # d_optimizer.step()
+
             optimizer.zero_grad()
-            loss = criterion(mid, mid_recon)
+            # loss =  0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+            loss = mse_loss(mid, mid_recon)
             loss.backward()
             optimizer.step()
 
             # store stats       
-            train_loss_epoch[0] = loss.item()
+            train_loss_epoch[0] += mse_loss.item()
+            # train_loss_epoch[1] += d_loss.item()
             num_batches += 1
 
             if args.max_num_images is not None:
@@ -109,8 +126,8 @@ if __name__ == '__main__':
                 start_time = time_now
                 if num_batches == 1 or num_batches % args.time_check_every == 0:
                     batches_left = train_batches - num_batches
-                    print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left'.format(epoch+1, args.num_epochs, mid.shape[0], 
-                        time_taken, time_taken * batches_left, batches_left, train_batches))
+                    print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left, train loss: {}'.format(epoch+1, args.num_epochs, mid.shape[0], 
+                        time_taken, time_taken * batches_left, batches_left, train_batches, mse_loss.item()))
 
         train_loss_epoch[0] /= num_batches
         train_loss_epoch[1] /= num_batches
@@ -124,6 +141,7 @@ if __name__ == '__main__':
             train_loss[-1] = train_loss_epoch
 
             model.eval()
+            # discriminator.eval()
 
             start_time = time.time()
             val_batches = len(valloader)
@@ -135,15 +153,19 @@ if __name__ == '__main__':
                     last = i['first_last_frames'][1]
                     # flow = i['flow']
                     mid = i['middle_frame']
-                    
                     first, last, mid = first.to(device), last.to(device), mid.to(device)
+                    valid = torch.ones(mid.shape[0], 1).to(device)
+                    fake = torch.zeros(mid.shape[0], 1).to(device)
 
                     mid_recon = model(first, last)
-                    loss = criterion(mid, mid_recon)
+                    # d_loss = 0.5 * (bce_loss(discriminator(mid), valid) + bce_loss(discriminator(mid_recon), fake))
+                    # loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(discriminator(mid_recon), valid)
+                    loss = mse_loss(mid, mid_recon)
 
                     # store stats
                     val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
-                    val_loss[-1][0] += loss.item()
+                    val_loss[-1][0] += mse_loss.item()
+                    # val_loss[-1][0] += d_loss.item()
                     num_batches += 1
 
                     # val time calculations

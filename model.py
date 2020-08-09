@@ -150,7 +150,7 @@ class RRIN(nn.Module):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.first_flow = UNet(6,4,5)
+        self.first_flow = UNet(6,4,4)
         # self.refine_flow = UNet(10,4,4)
         # self.weight_map = UNet(16,2,4)
         # self.final = UNet(9,3,4)
@@ -182,7 +182,7 @@ class Net(nn.Module):
         # # refine flow
         # flow_t = torch.cat((flow_t_0, flow_t_1, x), 1)
         # flow_t = self.refine_flow(flow_t)
-        # warping
+        # # warping
         # flow_t_0 = flow_t_0 + flow_t[:,:2,:,:]
         # flow_t_1 = flow_t_1 + flow_t[:,2:4,:,:]
         flow_t_0 = flow_t_0 + flow[:,:2,:,:]
@@ -209,3 +209,31 @@ class Net(nn.Module):
         # final = final.clamp(0,1)
 
         return final
+
+
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+
+        c = 64
+        self.model = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Sigmoid(),
+        )
+        self.fc1 = nn.Linear(2*c*32*56, 512)
+        self.fc2 = nn.Linear(512, 1)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.model(x)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.sigmoid(x)
+
+        return x 
