@@ -157,8 +157,6 @@ class Net(nn.Module):
     def warp(self, img, flow):
         _, _, H, W = img.size()
         gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
-        # gridX = torch.tensor(gridX, requires_grad=False).cuda()
-        # gridY = torch.tensor(gridY, requires_grad=False).cuda()
         gridX = torch.tensor(gridX, requires_grad=False).to(device)
         gridY = torch.tensor(gridY, requires_grad=False).to(device)
         u = flow[:,0,:,:]
