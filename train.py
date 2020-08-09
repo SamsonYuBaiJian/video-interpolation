@@ -138,8 +138,8 @@ if __name__ == '__main__':
                 start_time = time_now
                 if num_batches == 1 or num_batches % args.time_check_every == 0:
                     batches_left = train_batches - num_batches
-                    print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left, train loss: {}'.format(epoch+1, args.num_epochs, mid.shape[0], 
-                        time_taken, time_taken * batches_left, batches_left, train_batches, loss.item()))
+                    print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left, train loss: {}, d_loss: {}'.format(epoch+1, args.num_epochs, mid.shape[0], 
+                        time_taken, time_taken * batches_left, batches_left, train_batches, loss.item(), d_loss.item()))
 
         train_loss_epoch[0] /= num_batches
         train_loss_epoch[1] /= num_batches
