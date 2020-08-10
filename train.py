@@ -47,15 +47,15 @@ if __name__ == '__main__':
         'max_num_images': args.max_num_images
     }
 
-    # instantiate setup
+    # instantiate models, loss functions and optimisers
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = Net()
     model = model.to(device)
     discriminator = Discriminator()
-    # discriminator.weight_init(mean=0.0, std=0.02)
+    discriminator.weight_init(mean=0.0, std=0.02)
     discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
-    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr)
+    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, betas=(0.5, 0.999))
     mse_loss = torch.nn.MSELoss()
     mse_loss.to(device)
     bce_loss = torch.nn.BCELoss()
@@ -104,7 +104,8 @@ if __name__ == '__main__':
             mid = i['middle_frame']
             first, last, mid = first.to(device), last.to(device), mid.to(device)
 
-            mid_recon = model(first, last)
+            mid_recon, flow_t_0, flow_t_1, w1, w2 = model(first, last)
+            print(flow_t_0.shape, flow_t_1.shape, w1.shape, w2.shape)
 
             # discriminator training
             d_optimizer.zero_grad()
@@ -114,7 +115,7 @@ if __name__ == '__main__':
             d_loss.backward(retain_graph=True)
             d_optimizer.step()
 
-            # custom RRIN training
+            # adversarial RRIN training
             optimizer.zero_grad()
             loss =  0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(d_fake_result, torch.ones_like(d_fake_result).to(device))
             loss = mse_loss(mid, mid_recon)
@@ -165,7 +166,7 @@ if __name__ == '__main__':
                     mid = i['middle_frame']
                     first, last, mid = first.to(device), last.to(device), mid.to(device)
 
-                    mid_recon = model(first, last)
+                    mid_recon, _, _, _, _ = model(first, last)
                     d_real_result = discriminator(mid)
                     d_fake_result = discriminator(mid_recon)
                     d_loss = 0.5 * (bce_loss(d_real_result, torch.ones_like(d_real_result).to(device)) + bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device)))
@@ -193,7 +194,7 @@ if __name__ == '__main__':
                 val_psnr /= num_batches
                 print('Val g_loss: {}, d_loss: {}'.format(val_loss[-1][0], val_loss[-1][1]))
 
-                # save best model
+                # save best model so far, according to PSNR score
                 if val_psnr > current_best_val_psnr:
                     current_best_val_psnr = val_psnr
                     torch.save(model, args.save_model_path)

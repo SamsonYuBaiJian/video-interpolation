@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.models as models
 import numpy as np
 
 
@@ -188,15 +187,21 @@ class Net(nn.Module):
         w1, w2 = (1-t) * mask[:,0:1,:,:], t * mask[:,1:2,:,:]
         output = (w1 * xt1 + w2 * xt2) / (w1 + w2 + 1e-8)
 
-        return output
+        return output, flow_t_0, flow_t_1, w1, w2
     
     def forward(self, frame0, frame1, t=0.5):
-        output = self.process(frame0, frame1, t)
+        output, flow_t_0, flow_t_1, w1, w2 = self.process(frame0, frame1, t)
         # compose = torch.cat((frame0, frame1, output), 1)
         # final = self.final(compose) + output
         # final = final.clamp(0,1)
 
-        return output
+        return output, flow_t_0, flow_t_1, w1, w2
+
+
+def normal_init(m, mean, std):
+    if isinstance(m, torch.nn.Conv2d):
+        m.weight.data.normal_(mean, std)
+        m.bias.data.zero_()
 
 
 class Discriminator(nn.Module):
@@ -215,6 +220,10 @@ class Discriminator(nn.Module):
         self.fc1 = nn.Linear(2*c*32*56, 512)
         self.fc2 = nn.Linear(512, 1)
         self.sigmoid = nn.Sigmoid()
+
+    def weight_init(self, mean, std):
+        for m in self._modules:
+            normal_init(self._modules[m], mean, std)
 
     def forward(self, x):
         x = self.model(x)
