@@ -2,9 +2,6 @@
 
 ## Requirements
 
-## Docker
-`nvidia-docker run --rm -v ~/samson:/workspace/samson -it video-interpolate:latest`
-
 ## Features
 - [X] Create dataloader
 - [X] Add validation split
@@ -31,7 +28,7 @@
 ## Statistics
 
 ## Visualisations for GUI
-- Only multiples of 64
+- Only multiples of 8
 
 ## Video Converter
 

@@ -32,9 +32,12 @@ if __name__ == '__main__':
     last = PIL.Image.open(last_path)
     first = transforms(first)
     last = transforms(last)
+
+    # create path to store generated visualisations
     save_path = os.path.join(args.frames_path, 'generated')
     os.makedirs(save_path, exist_ok=True)
 
+    # model prediction
     with torch.no_grad():
         img_recon, flow_t_0, flow_t_1, w1, w2 = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
     

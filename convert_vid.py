@@ -2,7 +2,6 @@ import PIL
 import torchvision.transforms as transforms
 import numpy as np
 import torch
-import torchvision
 import time
 import cv2
 import argparse
@@ -16,6 +15,36 @@ if __name__ == '__main__':
     parser.add_argument('--save_vid_path', required=True)
     parser.add_argument('--saved_model_path', required=True)
     args = parser.parse_args()
+
+    # set up video capture
+    video_capture = cv2.VideoCapture(args.vid_path)
+    fps = video_capture.get(cv2.CAP_PROP_FPS)
+    success, image = video_capture.read()
+
+    # set up video writer
+    width, height = image.shape[1], image.shape[0]
+    video_writer = cv2.VideoWriter('./project' + '.mp4', cv2.VideoWriter_fourcc(*'MP4V') , fps*2.0, (width, height))
+
+    frame1 = image
+    gen_frame2 = 0
+    frame2 = 0
+
+    # Write the first frame of the video
+    video_writer.write(frame1)
+
+    while success:  
+        success,image = video_capture.read()
+        frame2 = image
+
+        gen_frame2 = frame1 # TODO: insert function that genertes frame 2
+
+        frame1 = image
+
+        video_writer.write(gen_frame2)
+        video_writer.write(frame2)
+
+    video_writer.release()
+    video_capture.release()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = torch.load(args.saved_model_path, map_location=torch.device(device))

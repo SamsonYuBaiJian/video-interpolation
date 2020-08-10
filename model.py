@@ -145,7 +145,7 @@ class UNetUpBlock(nn.Module):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.first_flow = UNet(6,4,4)
+        self.first_flow = UNet(6,4,5)
         # self.refine_flow = UNet(10,4,4)
         self.weight_map = UNet(16,2,4)
         # self.final = UNet(9,3,4)
