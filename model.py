@@ -68,7 +68,7 @@ class UNetUpBlock(nn.Module):
         super(UNetUpBlock, self).__init__()
 
         self.up = nn.Sequential(
-                nn.Upsample(mode='bilinear', scale_factor=2),
+                nn.Upsample(mode='bilinear', scale_factor=2, align_corners=False),
                 nn.Conv2d(in_size, out_size, kernel_size=3, padding=1),
             )
         self.conv_block = UNetConvBlock(in_size, out_size, padding)
@@ -218,11 +218,11 @@ class Discriminator(nn.Module):
             nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Sigmoid()
+            nn.LeakyReLU(0.2, inplace=True)
         )
+        self.fc1 = nn.Linear(2*c*32*56, 512)
+        self.fc2 = nn.Linear(512, 1)
+        self.sigmoid = nn.Sigmoid()
 
     def weight_init(self, mean, std):
         for m in self._modules:
@@ -230,5 +230,9 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         x = self.model(x)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.sigmoid(x)
 
         return x 
