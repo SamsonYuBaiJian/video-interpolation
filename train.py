@@ -1,4 +1,4 @@
-from model import Net, RRIN, Discriminator
+from model import Net, Discriminator
 import torch
 from torch.utils.data import DataLoader, Dataset
 from utils import VimeoDataset, get_psnr
