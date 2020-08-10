@@ -1,12 +1,9 @@
 import torch
-import torchvision
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import PIL
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-import cv2
 
 
 class VimeoDataset(Dataset):
@@ -25,7 +22,6 @@ class VimeoDataset(Dataset):
             ])
         self.middle_frame = []
         self.first_last_frames = []
-        self.flow = []
 
         with open(self.text_split, 'r') as f:
             filenames = f.readlines()
@@ -62,10 +58,16 @@ class VimeoDataset(Dataset):
 
 def get_psnr(mid, mid_recon):
     """
-    Returns PSNR value for two NumPy arrays.
+    Returns PSNR value for two NumPy arrays with size (batch_size, ...).
     """
     with torch.no_grad():
-        # mean over batches
         mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
         psnr = 10 * np.log10(1 / mse)
         return np.mean(psnr)
+
+
+def get_ssim(mid, mid_recon):
+    """
+    Returns SSIM value for two NumPy arrays with size (batch_size, ...).
+    """
+    pass

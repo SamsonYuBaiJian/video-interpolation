@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--saved_model_path', required=True)
     args = parser.parse_args()
 
+    # load pretrained model
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = torch.load(args.saved_model_path, map_location=torch.device(device))
     model.eval()
@@ -24,8 +25,10 @@ if __name__ == '__main__':
         transforms.ToTensor()
     ])
 
+    # make sure the three frames to be predicted are in the right order
     frames = sorted(os.listdir(args.frames_path))
 
+    # process frames
     first_path = os.path.join(args.frames_path, frames[0])
     last_path = os.path.join(args.frames_path, frames[2])
     first = PIL.Image.open(first_path)
@@ -40,3 +43,5 @@ if __name__ == '__main__':
     img_recon = img_recon.numpy().transpose((1, 2, 0))
 
     PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/predicted.jpg".format(args.frames_path))
+    # PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/flow.jpg".format(args.frames_path))
+    # PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/weight_map.jpg".format(args.frames_path))

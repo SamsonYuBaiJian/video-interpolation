@@ -1,8 +1,6 @@
-from model import Autoencoder
 import torch
-from torch.utils.data import DataLoader, Dataset
-from utils import VimeoDataset, get_psnr
-import numpy as np
+from torch.utils.data import DataLoader
+from utils import VimeoDataset, get_psnr, get_ssim
 import argparse
 import os
 
@@ -14,13 +12,13 @@ if __name__ == '__main__':
     parser.add_argument('--saved_model_path', type=str, required=True)
     args = parser.parse_args()
 
-    # instantiate setup
+    # load model
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = torch.load(args.saved_model_path, map_location=torch.device(device))
     model = model.to(device)
     model.eval()
 
-    # build dataloaders
+    # build test dataloader
     print('Building test dataloader...')
     seq_dir = os.path.join(args.vimeo_90k_path, 'sequences')
     test_txt = os.path.join(args.vimeo_90k_path, 'tri_testlist.txt')
@@ -28,7 +26,7 @@ if __name__ == '__main__':
     testloader = DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=0)
     print('Test dataloader successfully built!')
 
-    # start training
+    # get evaluation metrics PSNR and SSIM for test set
     print('\nTesting...')
     with torch.no_grad():
         psnr = 0
