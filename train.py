@@ -24,7 +24,7 @@ def save_stats(save_dir, exp_time, hyperparams, stats):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_epochs', default=50, type=int)
+    parser.add_argument('--num_epochs', default=20, type=int)
     parser.add_argument('--lr', default=1e-4, type=float)
     parser.add_argument('--batch_size', default=32, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
@@ -51,7 +51,6 @@ if __name__ == '__main__':
     model = Net()
     model = model.to(device)
     discriminator = Discriminator()
-    # discriminator.weight_init(mean=0.0, std=0.02)
     discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
     d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, betas=(0.5, 0.999))
@@ -104,7 +103,6 @@ if __name__ == '__main__':
             first, last, mid = first.to(device), last.to(device), mid.to(device)
 
             mid_recon, flow_t_0, flow_t_1, w1, w2 = model(first, last)
-            print(flow_t_0.shape, flow_t_1.shape, w1.shape, w2.shape)
 
             # discriminator training
             d_optimizer.zero_grad()

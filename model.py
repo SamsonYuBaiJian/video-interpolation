@@ -198,12 +198,6 @@ class Net(nn.Module):
         return output, flow_t_0, flow_t_1, w1, w2
 
 
-# def normal_init(m, mean, std):
-#     if isinstance(m, torch.nn.Conv2d):
-#         m.weight.data.normal_(mean, std)
-#         m.bias.data.zero_()
-
-
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -220,10 +214,6 @@ class Discriminator(nn.Module):
         self.fc1 = nn.Linear(2*c*32*56, 512)
         self.fc2 = nn.Linear(512, 1)
         self.sigmoid = nn.Sigmoid()
-
-    # def weight_init(self, mean, std):
-    #     for m in self._modules:
-    #         normal_init(self._modules[m], mean, std)
 
     def forward(self, x):
         x = self.model(x)
