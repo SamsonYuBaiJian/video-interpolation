@@ -13,7 +13,6 @@ from model import RRIN
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--frames_path', required=True)
-    parser.add_argument('--save_vid_dir', required=True)
     parser.add_argument('--saved_model_path', required=True)
     args = parser.parse_args()
 
@@ -25,27 +24,19 @@ if __name__ == '__main__':
         transforms.ToTensor()
     ])
 
-    os.makedirs(args.save_vid_dir, exist_ok=True)
-
     frames = sorted(os.listdir(args.frames_path))
-    for i in range(len(frames)):
-        if i % 2 == 0:
-            first_path = os.path.join(args.frames_path, frames[i])
-            last_path = os.path.join(args.frames_path, frames[i+2])
-            first = PIL.Image.open(first_path)
-            last = PIL.Image.open(last_path)
 
-            first = transforms(first)
-            last = transforms(last)
+    first_path = os.path.join(args.frames_path, frames[0])
+    last_path = os.path.join(args.frames_path, frames[2])
+    first = PIL.Image.open(first_path)
+    last = PIL.Image.open(last_path)
+    first = transforms(first)
+    last = transforms(last)
 
-            with torch.no_grad():
-                img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
-            
-            img_recon = img_recon.squeeze(0)
-            img_recon = img_recon.numpy().transpose((1, 2, 0))
-            first = first.numpy().transpose((1, 2, 0))
-            # last = last.numpy().transpose((1, 2, 0))
+    with torch.no_grad():
+        img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
+    
+    img_recon = img_recon.squeeze(0)
+    img_recon = img_recon.numpy().transpose((1, 2, 0))
 
-            PIL.Image.fromarray((first * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i))
-            PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i + 1))
-            # PIL.Image.fromarray((last * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i + 2))
+    PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/predicted.jpg".format(args.frames_path))
