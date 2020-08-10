@@ -25,7 +25,6 @@ def save_stats(save_dir, exp_time, hyperparams, stats):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--channels', default=64, type=int)
     parser.add_argument('--num_epochs', default=50, type=int)
     parser.add_argument('--lr', default=1e-4, type=float)
     parser.add_argument('--batch_size', default=64, type=int)
@@ -41,7 +40,6 @@ if __name__ == '__main__':
     # process information to save statistics
     exp_time = datetime.now().strftime("date%d%m%Ytime%H%M%S")
     hyperparams = {
-        'channels': args.channels,
         'num_epochs': args.num_epochs,
         'lr': args.lr,
         'batch_size': args.batch_size,
@@ -54,9 +52,10 @@ if __name__ == '__main__':
     model = Net()
     model = model.to(device)
     discriminator = Discriminator()
+    discriminator.weight_init(mean=0.0, std=0.02)
     discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
-    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr)
+    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, betas=(0.5, 0.999))
     mse_loss = torch.nn.MSELoss()
     mse_loss.to(device)
     bce_loss = torch.nn.BCELoss()

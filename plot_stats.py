@@ -28,9 +28,11 @@ def plot_stats(exp_dir):
     axes[0].set_title('G Loss vs Epoch')
     axes[1].set_title('D Loss vs Epoch')
     axes[0].plot(epochs, train_g_loss, label='Train G loss')
-    axes[0].plot(epochs, train_d_loss, label='Val G loss')
-    axes[1].plot(epochs, val_g_loss, label='Train D loss')
+    axes[0].plot(epochs, val_g_loss, label='Val G loss')
+    axes[1].plot(epochs, train_d_loss, label='Train D loss')
     axes[1].plot(epochs, val_d_loss, label='Val D loss')
+    axes[0].legend()
+    axes[1].legend()
 
     plt.show()
 

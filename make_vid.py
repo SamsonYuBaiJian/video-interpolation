@@ -28,6 +28,8 @@ if __name__ == '__main__':
         transforms.ToTensor()
     ])
 
+    os.makedirs(args.save_vid_dir, exist_ok=True)
+
     frames = sorted(os.listdir(args.frames_path))
     for i in range(len(frames)):
         if i % 2 == 0:
@@ -45,6 +47,8 @@ if __name__ == '__main__':
             img_recon = img_recon.squeeze(0)
             img_recon = img_recon.numpy().transpose((1, 2, 0))
             first = first.numpy().transpose((1, 2, 0))
+            # last = last.numpy().transpose((1, 2, 0))
 
             PIL.Image.fromarray((first * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i))
             PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i + 1))
+            # PIL.Image.fromarray((last * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i + 2))
