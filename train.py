@@ -1,9 +1,8 @@
 from model import Net, Discriminator
 import torch
-from torch.utils.data import DataLoader, Dataset
-from utils import VimeoDataset, get_psnr
+from torch.utils.data import DataLoader
+from utils import VimeoDataset, get_psnr, get_ssim
 import numpy as np
-import matplotlib.pyplot as plt
 import argparse
 from datetime import datetime
 import os
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     model = Net()
     model = model.to(device)
     discriminator = Discriminator()
-    discriminator.weight_init(mean=0.0, std=0.02)
+    # discriminator.weight_init(mean=0.0, std=0.02)
     discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
     d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, betas=(0.5, 0.999))
