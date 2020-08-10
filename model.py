@@ -201,6 +201,12 @@ class Net(nn.Module):
         return output
 
 
+def normal_init(m, mean, std):
+    if isinstance(m, torch.nn.Conv2d):
+        m.weight.data.normal_(mean, std)
+        m.bias.data.zero_()
+
+
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -217,6 +223,10 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             nn.Sigmoid()
         )
+
+    def weight_init(self, mean, std):
+        for m in self._modules:
+            normal_init(self._modules[m], mean, std)
 
     def forward(self, x):
         x = self.model(x)

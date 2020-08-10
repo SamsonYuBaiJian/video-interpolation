@@ -11,14 +11,6 @@ import time
 import pickle
 
 
-def weights_init(m):
-    classname = m.__class__.__name__
-    # for every Linear layer in a model..
-    if classname.find('Linear') != -1:
-        # apply a uniform distribution to the weights and a bias=0
-        m.weight.data.uniform_(0.0, 1.0)
-        m.bias.data.fill_(0)
-
 def save_stats(save_dir, exp_time, hyperparams, stats):
     save_path = os.path.join(save_dir, exp_time)
     os.makedirs(save_path, exist_ok=True)
@@ -60,7 +52,7 @@ if __name__ == '__main__':
     model = Net()
     model = model.to(device)
     discriminator = Discriminator()
-    discriminator.apply(mean=0.0, std=0.02)
+    discriminator.weight_init(mean=0.0, std=0.02)
     discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
     d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, betas=(0.5, 0.999))
