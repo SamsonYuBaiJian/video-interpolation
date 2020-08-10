@@ -3,12 +3,12 @@
 ## Docker
 `nvidia-docker run --rm -v ~/samson:/workspace/samson -it video-interpolate:latest`
 
-## TODO:
-- [X] Adapt RRIN
+## Features
+- [X] Add adversarial training to RRIN
 - [X] Add validation split
-- [X] PSNR evaluation metric for SOTA comparisons
+- [X] Evaluation metrics (PSNR and SSIM)
 - [X] Argparse
-- [ ] Different image sizes?
 - [X] Saving statistics
 - [X] Plotting statistics
-- [X] Video maker
+- [X] Video converter
+- [X] Optical flow and weight map visualisations
