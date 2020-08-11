@@ -209,6 +209,12 @@ class Net(nn.Module):
         return final, flow_t_0, flow_t_1, w1, w2
 
 
+def normal_init(m, mean, std):
+    if isinstance(m, nn.Conv2d):
+        m.weight.data.normal_(mean, std)
+        m.bias.data.zero_()
+
+
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -219,17 +225,21 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*2, out_channels=c*2, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels=c*2, out_channels=c*4, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*2, out_channels=c*3, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels=c*4, out_channels=c*8, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*3, out_channels=1, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels=c*8, out_channels=1, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Sigmoid()
         )
         # self.fc1 = nn.Linear(2*c*32*56, 512)
         # self.fc2 = nn.Linear(512, 1)
         # self.sigmoid = nn.Sigmoid()
+
+    def weight_init(self, mean, std):
+        for m in self._modules:
+            normal_init(self._modules[m], mean, std)
 
     def forward(self, x):
         x = self.model(x)
