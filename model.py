@@ -227,9 +227,9 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(in_channels=c*2, out_channels=c*4, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*4, out_channels=c*8, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels=c*4, out_channels=c*8, kernel_size=4, stride=1, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=c*8, out_channels=1, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels=c*8, out_channels=1, kernel_size=4, stride=1, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Sigmoid()
         )
@@ -247,5 +247,6 @@ class Discriminator(nn.Module):
         # x = F.leaky_relu(self.fc1(x), 0.2)
         # x = F.leaky_relu(self.fc2(x), 0.2)
         # x = self.sigmoid(x)
+        print(x.shape)
 
         return x 
