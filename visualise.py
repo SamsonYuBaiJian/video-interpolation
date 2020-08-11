@@ -37,14 +37,15 @@ if __name__ == '__main__':
     save_path = os.path.join(args.frames_path, 'generated')
     os.makedirs(save_path, exist_ok=True)
 
+    t = 0.9
     # model prediction
     with torch.no_grad():
-        img_recon, flow_t_0, flow_t_1, w1, w2 = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
+        img_recon, flow_t_0, flow_t_1, w1, w2 = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device), t)
     
     # save middle frame prediction
     img_recon = img_recon.squeeze(0).numpy().transpose((1, 2, 0)) * 255
     img_recon = img_recon.astype(np.uint8)
-    PIL.Image.fromarray(img_recon).save("{}/predicted.jpg".format(save_path))
+    PIL.Image.fromarray(img_recon).save("{}/predicted_{}.jpg".format(save_path, t))
 
     # save optical flows
     flow_t_0 = flow_t_0.squeeze(0).numpy().transpose((1, 2, 0))

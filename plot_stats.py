@@ -4,7 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 
-def plot_stats(exp_dir):
+def plot_stats(exp_dir, save):
     with open(os.path.join(exp_dir, 'stats.pickle'), 'rb') as handle:
         stats = pickle.load(handle)
         handle.close()
@@ -22,17 +22,21 @@ def plot_stats(exp_dir):
     val_g_loss = [i[0] for i in stats['val_loss']]
     val_d_loss = [i[1] for i in stats['val_loss']]
     length = len(stats['train_loss'])
+    print(length)
     epochs = [epoch_interval * i for i in range(length)]
 
     _, axes = plt.subplots(1, 2)
-    axes[0].set_title('G Loss vs Epoch')
-    axes[1].set_title('D Loss vs Epoch')
-    axes[0].plot(epochs, train_g_loss, label='Train G loss')
-    axes[0].plot(epochs, val_g_loss, label='Val G loss')
-    axes[1].plot(epochs, train_d_loss, label='Train D loss')
-    axes[1].plot(epochs, val_d_loss, label='Val D loss')
+    axes[0].set_title('Custom RRIN Loss vs Epoch')
+    axes[1].set_title('Discriminator Loss vs Epoch')
+    axes[0].plot(epochs, train_g_loss, label='Train loss')
+    axes[0].plot(epochs, val_g_loss, label='Val loss')
+    axes[1].plot(epochs, train_d_loss, label='Train loss')
+    axes[1].plot(epochs, val_d_loss, label='Val loss')
     axes[0].legend()
     axes[1].legend()
+
+    if save:
+        plt.savefig('./plot_{}_{}.png'.format(hyperparams['lr'], hyperparams['batch_size']))
 
     plt.show()
 
@@ -40,6 +44,7 @@ def plot_stats(exp_dir):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp_dir', required=True)
+    parser.add_argument('--save', action='store_true')
     args = parser.parse_args()
 
-    plot_stats(args.exp_dir)
+    plot_stats(args.exp_dir, args.save)

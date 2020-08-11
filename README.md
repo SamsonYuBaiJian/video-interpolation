@@ -13,9 +13,10 @@
 - [X] Add classic interpolation methods
 - [X] Video converter
 - [X] Optical flow and weight map visualisations
+- [ ] Mark changes from SOTA model
 
 ## Dataloader
-- The dataloader for the Vimeo-90k dataset can be found in `./utils.py`.
+- The dataloader for the Vimeo-90k dataset can be found in `./dataloader.py`.
 - The data processing we have done includes:
   - ABC
 
@@ -34,5 +35,6 @@
 
 ## References
 - Vimeo-90k
-- UNet: https://github.com/jvanvugt/pytorch-unet
+- U-Net: https://github.com/jvanvugt/pytorch-unet
 - RRIN
+- PSNR and SIIM: https://cvnote.ddlee.cn/2019/09/12/psnr-ssim-python

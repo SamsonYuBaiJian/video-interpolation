@@ -1,7 +1,7 @@
 from model import Net, Discriminator
 import torch
 from torch.utils.data import DataLoader
-from utils import VimeoDataset, get_psnr, get_ssim
+from dataloader import VimeoDataset
 import numpy as np
 import argparse
 from datetime import datetime
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # to store evaluation metrics
     train_loss = []
     val_loss = []
-    current_best_val_psnr = float('-inf')
+    current_best_val_loss = float('inf')
 
     # build dataloaders
     print('Building train/val dataloaders...')
@@ -171,7 +171,7 @@ if __name__ == '__main__':
                     loss = mse_loss(mid, mid_recon)
 
                     # store stats
-                    val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
+                    # val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
                     val_loss[-1][0] += loss.item()
                     val_loss[-1][1] += d_loss.item()
                     num_batches += 1
@@ -188,14 +188,14 @@ if __name__ == '__main__':
 
                 val_loss[-1][0] /= num_batches
                 val_loss[-1][1] /= num_batches
-                val_psnr /= num_batches
+                # val_psnr /= num_batches
                 print('Val g_loss: {}, d_loss: {}'.format(val_loss[-1][0], val_loss[-1][1]))
 
-                # save best model so far, according to PSNR score
-                if val_psnr > current_best_val_psnr:
-                    current_best_val_psnr = val_psnr
+                # save best model so far, according to validation loss
+                if val_loss[-1][0] < current_best_val_loss:
+                    current_best_val_loss = val_loss[-1][0]
                     torch.save(model, args.save_model_path)
-                    print("Saved new best model with val PSNR: {}!".format(val_psnr))
+                    print("Saved new best model!")
 
             # save statistics
             stats = {

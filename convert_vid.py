@@ -6,7 +6,6 @@ import time
 import cv2
 import argparse
 import os
-from model import RRIN
 
 
 if __name__ == '__main__':

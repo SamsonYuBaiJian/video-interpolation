@@ -3,7 +3,6 @@ from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import PIL
 import os
-import numpy as np
 
 
 class VimeoDataset(Dataset):
@@ -54,20 +53,3 @@ class VimeoDataset(Dataset):
         sample = {'first_last_frames': first_last, 'middle_frame': mid}
 
         return sample
-
-
-def get_psnr(mid, mid_recon):
-    """
-    Returns PSNR value for two NumPy arrays with size (batch_size, ...).
-    """
-    with torch.no_grad():
-        mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
-        psnr = 10 * np.log10(1 / mse)
-        return np.mean(psnr)
-
-
-def get_ssim(mid, mid_recon):
-    """
-    Returns SSIM value for two NumPy arrays with size (batch_size, ...).
-    """
-    pass
