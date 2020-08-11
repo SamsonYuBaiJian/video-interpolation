@@ -247,6 +247,5 @@ class Discriminator(nn.Module):
         # x = F.leaky_relu(self.fc1(x), 0.2)
         # x = F.leaky_relu(self.fc2(x), 0.2)
         # x = self.sigmoid(x)
-        print(x.shape)
 
         return x 
