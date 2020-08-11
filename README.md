@@ -3,38 +3,21 @@
 ## Requirements
 
 ## Features
-- [X] Create dataloader
+- [X] Create dataloader: `./dataloader.py`
 - [X] Add validation split
-- [X] Add adversarial training to RRIN
-- [X] Argparse
-- [X] Evaluation metrics (PSNR and SSIM)
-- [X] Saving statistics
-- [X] Plotting statistics
-- [X] Add classic interpolation methods
-- [X] Video converter
-- [X] Optical flow and weight map visualisations
-- [ ] Mark changes from SOTA model
-
-## Dataloader
-- The dataloader for the Vimeo-90k dataset can be found in `./dataloader.py`.
-- The data processing we have done includes:
-  - ABC
-
-## Model
-
-## Evaluation Metrics
-- PSNR
-- SSIM
-
-## Statistics
+- [X] Add discriminator to state-of-the-art model RRIN and mark changes: `./model.py`
+- [X] Argparse for custom settings
+- [X] Evaluation metrics (peak signal-to-noise ratio and structural similarity index measure): `./evaluate.py`
+- [X] Training/validation loops and saving statistics: `./train.py`
+- [X] Plotting statistics: `./plot_stats.py`
+- [X] Video converter: `./convert_vid.py`
+- [X] Visualisations: optical flow estimates and weight maps
 
 ## Visualisations for GUI
 - Only multiples of 8
 
-## Video Converter
-
 ## References
-- Vimeo-90k
+- Vimeo-90k: http://toflow.csail.mit.edu/
 - U-Net: https://github.com/jvanvugt/pytorch-unet
 - RRIN
-- PSNR and SIIM: https://cvnote.ddlee.cn/2019/09/12/psnr-ssim-python
+- PSNR and SIIM: https://scikit-image.org/docs/dev/api/skimage.metrics.html

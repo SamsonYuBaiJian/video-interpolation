@@ -4,33 +4,15 @@ from dataloader import VimeoDataset
 import argparse
 import os
 import numpy as np
-import skimage
-
-
-def get_psnr(mid, mid_recon):
-    """
-    Returns PSNR sum for two NumPy arrays with size (batch_size, ...).
-    """
-    print(mid_recon, mid)
-    with torch.no_grad():
-        skimage.measure.compare_psnr(mid_recon, mid, data_range=None)
-        mse = (np.square(mid_recon - mid)).mean(axis=(1,2,3))
-        psnr = 10 * np.log10(1 / mse)
-        print(psnr.shape)
-        return np.mean(psnr)
-
-
-def get_ssim(mid, mid_recon):
-    """
-    Returns SSIM sum for two NumPy arrays with size (batch_size, ...).
-    """
-    pass
+import skimage.metrics
+import time
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
     parser.add_argument('--saved_model_path', type=str, required=True)
+    parser.add_argument('--time_check_every', type=int, default=20)
     args = parser.parse_args()
 
     # load model
@@ -53,16 +35,34 @@ if __name__ == '__main__':
         psnr = 0
         ssim = 0
         num_samples = len(testloader)
+        start_time = time.time()
+        cnt = 0
+
         for i in testloader:
-            for i in testloader:
-                first = i['first_last_frames'][0]
-                last = i['first_last_frames'][1]
-                mid = i['middle_frame']
-                first, last, mid = first.to(device), last.to(device), mid.to(device)
+            first = i['first_last_frames'][0]
+            last = i['first_last_frames'][1]
+            mid = i['middle_frame']
+            first, last, mid = first.to(device), last.to(device), mid.to(device)
 
-                mid_recon, _, _, _, _ = model(first, last)
+            mid_recon, _, _, _, _ = model(first, last)
 
-                psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
+            mid = mid.squeeze(0).detach().to('cpu').numpy().transpose((1, 2, 0))
+            mid_recon = mid_recon.squeeze(0).detach().to('cpu').numpy().transpose((1, 2, 0))
+
+            # calculate PSNR and SSIM
+            psnr += skimage.metrics.peak_signal_noise_ratio(mid, mid_recon, data_range=1)
+            ssim += skimage.metrics.structural_similarity(mid, mid_recon, data_range=1, multichannel=True)
+
+            time_now = time.time()
+            time_taken = time_now - start_time
+            start_time = time_now
+
+            cnt += 1
+
+            if cnt == 1 or cnt % args.time_check_every == 0:
+                samples_left = num_samples - cnt
+                print('Time per sample: {} seconds --> {} seconds for {} / {} samples left'.format(time_taken, time_taken * samples_left, samples_left, num_samples))
 
         psnr /= num_samples
-        print('Test set PSNR: {}, SSIM: {}'.format(psnr, 0))
+        ssim /= num_samples
+        print('Test set PSNR: {}, SSIM: {}'.format(psnr, ssim))

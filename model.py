@@ -88,6 +88,7 @@ class UNetUpBlock(nn.Module):
         return out
 
 
+# NOTE: this is the original RRIN model we built our adapted model upon
 # def warp(img, flow):
 #     _, _, H, W = img.size()
 #     gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
@@ -167,24 +168,31 @@ class Net(nn.Module):
         return warped
 
     def process(self, frame0, frame1, t):
+        # NOTE: the parts that are commented out are the parts that have been removed from the original RRIN, i.e. UNet_2 and UNet_4
+
         # get bidrectional flow
         x = torch.cat((frame0, frame1), 1)
         flow = self.first_flow(x)
         flow_0_1, flow_1_0 = flow[:,:2,:,:], flow[:,2:4,:,:]
         flow_t_0 = -(1-t) * t * flow_0_1 + t * t * flow_1_0
         flow_t_1 = (1-t) * (1-t) * flow_0_1 - t * (1-t) * flow_1_0
-        # # refine flow
+
+        # refine flow
         # flow_t = torch.cat((flow_t_0, flow_t_1, x), 1)
         # flow_t = self.refine_flow(flow_t)
-        # # warping
         # flow_t_0 = flow_t_0 + flow_t[:,:2,:,:]
         # flow_t_1 = flow_t_1 + flow_t[:,2:4,:,:]
+
+        # warping
         xt1 = self.warp(frame0, flow_t_0)
         xt2 = self.warp(frame1, flow_t_1)
+
         # get weight map
         temp = torch.cat((flow_t_0, flow_t_1, x, xt1, xt2), 1)
         mask = torch.sigmoid(self.weight_map(temp))
         w1, w2 = (1-t) * mask[:,0:1,:,:], t * mask[:,1:2,:,:]
+        
+        # get final coarse output
         output = (w1 * xt1 + w2 * xt2) / (w1 + w2 + 1e-8)
 
         return output, flow_t_0, flow_t_1, w1, w2
@@ -194,6 +202,8 @@ class Net(nn.Module):
         # compose = torch.cat((frame0, frame1, output), 1)
         # final = self.final(compose) + output
         # final = final.clamp(0,1)
+
+        # make sure output values are between 0 and 1, i.e. valid image tensors 
         final = output.clamp(0,1)
 
         return final, flow_t_0, flow_t_1, w1, w2

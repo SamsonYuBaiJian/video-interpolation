@@ -107,15 +107,16 @@ if __name__ == '__main__':
             # discriminator training
             d_optimizer.zero_grad()
             d_real_result = discriminator(mid)
-            d_fake_result = discriminator(mid_recon)
+            # prevent generator backward pass, to reduce computation time
+            d_fake_result = discriminator(mid_recon.detach())
             d_loss = 0.5 * (bce_loss(d_real_result, torch.ones_like(d_real_result).to(device)) + bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device)))
-            d_loss.backward(retain_graph=True)
+            d_loss.backward()
             d_optimizer.step()
 
-            # adversarial RRIN training
+            # custom RRIN training
             optimizer.zero_grad()
+            d_fake_result = discriminator(mid_recon)
             loss =  0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(d_fake_result, torch.ones_like(d_fake_result).to(device))
-            loss = mse_loss(mid, mid_recon)
             loss.backward()
             optimizer.step()
 
@@ -164,14 +165,13 @@ if __name__ == '__main__':
                     first, last, mid = first.to(device), last.to(device), mid.to(device)
 
                     mid_recon, _, _, _, _ = model(first, last)
-                    d_real_result = discriminator(mid)
                     d_fake_result = discriminator(mid_recon)
-                    d_loss = 0.5 * (bce_loss(d_real_result, torch.ones_like(d_real_result).to(device)) + bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device)))
                     loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(d_fake_result, torch.ones_like(d_fake_result).to(device))
                     loss = mse_loss(mid, mid_recon)
+                    d_real_result = discriminator(mid)
+                    d_loss = 0.5 * (bce_loss(d_real_result, torch.ones_like(d_real_result).to(device)) + bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device)))
 
                     # store stats
-                    # val_psnr += get_psnr(mid.detach().to('cpu').numpy(), mid_recon.detach().to('cpu').numpy())
                     val_loss[-1][0] += loss.item()
                     val_loss[-1][1] += d_loss.item()
                     num_batches += 1
@@ -188,7 +188,6 @@ if __name__ == '__main__':
 
                 val_loss[-1][0] /= num_batches
                 val_loss[-1][1] /= num_batches
-                # val_psnr /= num_batches
                 print('Val g_loss: {}, d_loss: {}'.format(val_loss[-1][0], val_loss[-1][1]))
 
                 # save best model so far, according to validation loss
