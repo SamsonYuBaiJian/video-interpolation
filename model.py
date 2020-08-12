@@ -238,6 +238,7 @@ class Discriminator(nn.Module):
             normal_init(self._modules[m], mean, std)
 
     def forward(self, first, mid, last):
-        x = self.model(first, mid, last)
+        x = torch.cat([first, mid, last], dim=1)
+        x = self.model(x)
 
         return x 
