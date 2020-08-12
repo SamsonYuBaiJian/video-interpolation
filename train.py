@@ -54,7 +54,7 @@ if __name__ == '__main__':
     discriminator.weight_init(mean=0.0, std=0.02)
     discriminator = discriminator.to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr)
-    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr*2, betas=(0.5, 0.999))
+    d_optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=args.lr, betas=(0.5, 0.999))
     mse_loss = torch.nn.MSELoss()
     mse_loss.to(device)
     bce_loss = torch.nn.BCELoss()
