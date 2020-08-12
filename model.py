@@ -221,7 +221,7 @@ class Discriminator(nn.Module):
 
         c = 64
         self.model = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=c, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels=9, out_channels=c, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(in_channels=c, out_channels=c*2, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
@@ -237,7 +237,7 @@ class Discriminator(nn.Module):
         for m in self._modules:
             normal_init(self._modules[m], mean, std)
 
-    def forward(self, x):
-        x = self.model(x)
+    def forward(self, first, mid, last):
+        x = self.model(first, mid, last)
 
         return x 

@@ -22,7 +22,7 @@ def plot_stats(exp_dir, save):
     val_g_loss = [i[0] for i in stats['val_loss']]
     val_d_loss = [i[1] for i in stats['val_loss']]
     length = len(stats['train_loss'])
-    epochs = [epoch_interval * i for i in range(length)]
+    epochs = [epoch_interval * i + 1 for i in range(length)]
 
     _, axes = plt.subplots(1, 2)
     axes[0].set_title('Custom RRIN Loss vs Epoch')
@@ -31,6 +31,8 @@ def plot_stats(exp_dir, save):
     axes[0].plot(epochs, val_g_loss, label='Val loss')
     axes[1].plot(epochs, train_d_loss, label='Train loss')
     axes[1].plot(epochs, val_d_loss, label='Val loss')
+    axes[0].set_xticks(epochs)
+    axes[1].set_xticks(epochs)
     axes[0].legend()
     axes[1].legend()
 

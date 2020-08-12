@@ -84,7 +84,7 @@ if __name__ == '__main__':
     print('\nTraining...')
     for epoch in range(args.num_epochs):
         num_batches = 0
-        train_loss_epoch = [0, 0]
+        train_loss_epoch = [0, 0, 0]
         
         model.train()
         discriminator.train()
@@ -107,23 +107,26 @@ if __name__ == '__main__':
 
             # discriminator training
             d_optimizer.zero_grad()
-            d_real_result = discriminator(mid)
+            d_real_result = discriminator(first, mid, last)
             # prevent generator backward pass, to reduce computation time
-            d_fake_result = discriminator(mid_recon.detach())
-            d_loss = 0.5 * (bce_loss(d_real_result, torch.ones_like(d_real_result).to(device)) + bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device)))
+            d_fake_result = discriminator(first, mid_recon.detach(), last)
+            d_loss_real = 0.5 * bce_loss(d_real_result, torch.ones_like(d_real_result).to(device))
+            d_loss_fake = 0.5 * bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device))
+            d_loss = d_loss_real + d_loss_fake
             d_loss.backward()
             d_optimizer.step()
 
             # custom RRIN training
             optimizer.zero_grad()
-            d_fake_result = discriminator(mid_recon)
+            d_fake_result = discriminator(first, mid_recon, last)
             loss =  0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(d_fake_result, torch.ones_like(d_fake_result).to(device))
             loss.backward()
             optimizer.step()
 
             # store stats       
             train_loss_epoch[0] += loss.item()
-            train_loss_epoch[1] += d_loss.item()
+            train_loss_epoch[1] += d_loss_real.item()
+            train_loss_epoch[2] += d_loss_fake.item()
             num_batches += 1
 
             if args.max_num_images is not None:
@@ -137,12 +140,13 @@ if __name__ == '__main__':
                 start_time = time_now
                 if num_batches == 1 or num_batches % args.time_check_every == 0:
                     batches_left = train_batches - num_batches
-                    print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left, train loss: {}, d_loss: {}'.format(epoch+1, args.num_epochs, mid.shape[0], 
-                        time_taken, time_taken * batches_left, batches_left, train_batches, loss.item(), d_loss.item()))
+                    print('Epoch [{} / {}] Time per batch of {}: {} seconds --> {} seconds for {} / {} batches left, train loss: {}, d_loss_real: {}, d_loss_fake: {}'.format(
+                        epoch+1, args.num_epochs, mid.shape[0], time_taken, time_taken * batches_left, batches_left, train_batches, loss.item(), d_loss_real.item(), d_loss_fake.item()))
 
         train_loss_epoch[0] /= num_batches
         train_loss_epoch[1] /= num_batches
-        print('Epoch [{} / {}] Train g_loss: {}, d_loss: {}'.format(epoch+1, args.num_epochs, train_loss_epoch[0], train_loss_epoch[1]))
+        train_loss_epoch[2] /= num_batches
+        print('Epoch [{} / {}] Train g_loss: {}, d_loss_real: {}, d_loss_fake: {}'.format(epoch+1, args.num_epochs, train_loss_epoch[0], train_loss_epoch[1], train_loss_epoch[2]))
 
         # for evaluation, save best model and statistics
         if epoch % args.eval_every == 0:
@@ -166,10 +170,11 @@ if __name__ == '__main__':
                     first, last, mid = first.to(device), last.to(device), mid.to(device)
 
                     mid_recon, _, _, _, _ = model(first, last)
-                    d_fake_result = discriminator(mid_recon)
+                    d_fake_result = discriminator(first, mid_recon, last)
                     loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(d_fake_result, torch.ones_like(d_fake_result).to(device))
-                    d_real_result = discriminator(mid)
-                    d_loss = 0.5 * (bce_loss(d_real_result, torch.ones_like(d_real_result).to(device)) + bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device)))
+                    d_real_result = discriminator(first, mid, last)
+                    d_loss_real = 0.5 * bce_loss(d_real_result, torch.ones_like(d_real_result).to(device))
+                    d_loss_fake = 0.5 * bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device))
 
                     # store stats
                     val_loss[-1][0] += loss.item()
