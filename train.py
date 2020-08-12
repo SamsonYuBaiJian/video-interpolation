@@ -150,9 +150,8 @@ if __name__ == '__main__':
 
         # for evaluation, save best model and statistics
         if epoch % args.eval_every == 0:
-            train_loss.append([0,0])
-            val_loss.append([0,0])
-            val_psnr = 0
+            train_loss.append([0,0,0])
+            val_loss.append([0,0,0])
             train_loss[-1] = train_loss_epoch
 
             model.eval()
@@ -178,7 +177,8 @@ if __name__ == '__main__':
 
                     # store stats
                     val_loss[-1][0] += loss.item()
-                    val_loss[-1][1] += d_loss.item()
+                    val_loss[-1][1] += d_loss_real.item()
+                    val_loss[-1][2] += d_loss_fake.item()
                     num_batches += 1
 
                     # val time calculations
@@ -193,7 +193,8 @@ if __name__ == '__main__':
 
                 val_loss[-1][0] /= num_batches
                 val_loss[-1][1] /= num_batches
-                print('Val g_loss: {}, d_loss: {}'.format(val_loss[-1][0], val_loss[-1][1]))
+                val_loss[-1][2] /= num_batches
+                print('Val g_loss: {}, d_loss_real: {}, d_loss_fake: {}'.format(val_loss[-1][0], val_loss[-1][1], val_loss[-1][2]))
 
                 # save best model so far, according to validation loss
                 if val_loss[-1][0] < current_best_val_loss:
