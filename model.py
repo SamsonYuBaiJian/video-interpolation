@@ -232,9 +232,6 @@ class Discriminator(nn.Module):
             nn.Conv2d(in_channels=c*8, out_channels=1, kernel_size=4, stride=1, padding=1),
             nn.Sigmoid()
         )
-        # self.fc1 = nn.Linear(2*c*32*56, 512)
-        # self.fc2 = nn.Linear(512, 1)
-        # self.sigmoid = nn.Sigmoid()
 
     def weight_init(self, mean, std):
         for m in self._modules:
@@ -242,9 +239,5 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         x = self.model(x)
-        # x = x.view(x.size(0), -1)
-        # x = F.leaky_relu(self.fc1(x), 0.2)
-        # x = F.leaky_relu(self.fc2(x), 0.2)
-        # x = self.sigmoid(x)
 
         return x 
