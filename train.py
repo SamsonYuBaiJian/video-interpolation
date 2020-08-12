@@ -168,7 +168,6 @@ if __name__ == '__main__':
                     mid_recon, _, _, _, _ = model(first, last)
                     d_fake_result = discriminator(mid_recon)
                     loss = g_loss = 0.999 * mse_loss(mid, mid_recon) + 0.001 * bce_loss(d_fake_result, torch.ones_like(d_fake_result).to(device))
-                    loss = mse_loss(mid, mid_recon)
                     d_real_result = discriminator(mid)
                     d_loss = 0.5 * (bce_loss(d_real_result, torch.ones_like(d_real_result).to(device)) + bce_loss(d_fake_result, torch.zeros_like(d_fake_result).to(device)))
 

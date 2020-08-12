@@ -22,7 +22,6 @@ def plot_stats(exp_dir, save):
     val_g_loss = [i[0] for i in stats['val_loss']]
     val_d_loss = [i[1] for i in stats['val_loss']]
     length = len(stats['train_loss'])
-    print(length)
     epochs = [epoch_interval * i for i in range(length)]
 
     _, axes = plt.subplots(1, 2)

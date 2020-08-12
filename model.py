@@ -230,7 +230,6 @@ class Discriminator(nn.Module):
             nn.Conv2d(in_channels=c*4, out_channels=c*8, kernel_size=4, stride=1, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(in_channels=c*8, out_channels=1, kernel_size=4, stride=1, padding=1),
-            nn.LeakyReLU(0.2, inplace=True),
             nn.Sigmoid()
         )
         # self.fc1 = nn.Linear(2*c*32*56, 512)
