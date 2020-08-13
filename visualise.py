@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # process frames
     first_path = os.path.join(args.frames_path, frames[0])
-    last_path = os.path.join(args.frames_path, frames[2])
+    last_path = os.path.join(args.frames_path, frames[1])
     first = PIL.Image.open(first_path)
     last = PIL.Image.open(last_path)
     first = transforms(first)
