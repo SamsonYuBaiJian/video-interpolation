@@ -5,3 +5,4 @@ __pycache__/*
 vimeo-90k/*
 /weights
 /results
+/frames
