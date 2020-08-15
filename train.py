@@ -11,6 +11,15 @@ import pickle
 
 
 def save_stats(save_dir, exp_time, hyperparams, stats):
+    """
+    Save the hyperparameter settings and per-epoch statistics for the experiment.
+
+    Args:
+       save_dir (string): The directory of the folder to create save the hyperparameter settings and training progress statistics.
+       exp_type (string): Starting date and time of the experiment, to use as a unique string to name the statistics folder.
+       hyperparams (dict): Hyperparameter settings of the experiment.
+       stats (dict): Statistics of the experiment.
+    """
     save_path = os.path.join(save_dir, exp_time)
     os.makedirs(save_path, exist_ok=True)
     if not os.path.exists(os.path.join(save_path, 'hyperparams.pickle')):
@@ -26,7 +35,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_epochs', default=20, type=int)
     parser.add_argument('--lr', default=1e-4, type=float)
-    parser.add_argument('--batch_size', default=32, type=int)
+    parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--vimeo_90k_path', type=str, required=True)
     parser.add_argument('--save_stats_path', type=str, required=True)
     parser.add_argument('--eval_every', default=1, type=int)

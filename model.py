@@ -6,6 +6,7 @@ import numpy as np
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+# NOTE: the 3 customisable U-Net classes below are adapted by the creators of RRIN from https://github.com/jvanvugt/pytorch-unet
 class UNet(nn.Module):
     def __init__(self, in_channels=1, n_classes=2, depth=5, filter_num=5, padding=True,):
         super(UNet, self).__init__()
@@ -143,15 +144,28 @@ class UNetUpBlock(nn.Module):
 #         return final
 
 
+# NOTE: we mark our changes to the original RRIN model by commenting out the parts that we removed, i.e. UNet_2 and UNet_4
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
+        # this U-Net produces the coarse bidirectional optical flow estimates
         self.first_flow = UNet(6,4,5)
         # self.refine_flow = UNet(10,4,4)
+        # this U-Net produces the weight maps
         self.weight_map = UNet(16,2,4)
         # self.final = UNet(9,3,4)
 
     def warp(self, img, flow):
+        """
+        Warps input image tensors with corresponding optical flows.
+
+        Args:
+            img (Tensor): Input image tensors.
+            flow (Tensor): Input optical flows.
+
+        Returns:
+            warped (Tensor): Image tensors warped with optical flows.
+        """
         _, _, H, W = img.size()
         gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
         gridX = torch.tensor(gridX, requires_grad=False).to(device)
@@ -168,8 +182,21 @@ class Net(nn.Module):
         return warped
 
     def process(self, frame0, frame1, t):
-        # NOTE: the parts that are commented out are the parts that have been removed from the original RRIN, i.e. UNet_2 and UNet_4
+        """
+        Main part of forward pass of model.
 
+        Args:
+            frame0 (Tensor): First frames' image tensors.
+            frame1 (Tensor): Last frames' image tensors.
+            t (float, optional): Time interval between frame0 and frame1 to generate the interpolated frame for, ranges from 0 to 1.
+
+        Returns:
+            output (Tensor): Interpolated frames' image tensors warped with optical flows and processed with weight maps.
+            flow_t_0 (Tensor): Optical flow estimate for t and 0.
+            flow_t_1 (Tensor): Optical flow estimate for t and 1.
+            w1 (Tensor): Weight map for t and 0.
+            w2 (Tensor): Weight map for t and 1.
+        """
         # get bidrectional flow
         x = torch.cat((frame0, frame1), 1)
         flow = self.first_flow(x)
@@ -198,18 +225,29 @@ class Net(nn.Module):
         return output, flow_t_0, flow_t_1, w1, w2
     
     def forward(self, frame0, frame1, t=0.5):
+        """
+        Forward pass of model.
+
+        Args:
+            frame0 (Tensor): First frames' image tensors.
+            frame1 (Tensor): Last frames' image tensors.
+            t (float, optional): Time interval between frame0 and frame1 to generate the interpolated frame for, ranges from 0 to 1.
+        """
         output, flow_t_0, flow_t_1, w1, w2 = self.process(frame0, frame1, t)
         # compose = torch.cat((frame0, frame1, output), 1)
         # final = self.final(compose) + output
         # final = final.clamp(0,1)
 
-        # make sure output values are between 0 and 1, i.e. valid image tensors 
+        # make sure final output values are between 0 and 1, i.e. valid image tensors 
         final = output.clamp(0,1)
 
         return final, flow_t_0, flow_t_1, w1, w2
 
 
 def normal_init(m, mean, std):
+    """
+    Instantiates weights for specific layer types in PyTorch with values drawn from a normal distribution.
+    """
     if isinstance(m, nn.Conv2d):
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
@@ -217,6 +255,9 @@ def normal_init(m, mean, std):
 
 class Discriminator(nn.Module):
     def __init__(self):
+        """
+        PatchGAN discriminator.
+        """
         super(Discriminator, self).__init__()
 
         c = 64
@@ -233,11 +274,31 @@ class Discriminator(nn.Module):
             nn.Sigmoid()
         )
 
+
     def weight_init(self, mean, std):
+        """
+        Allows for instantiation of discriminator weights as values drawn from a normal distribution.
+
+        Args:
+            mean (float): Mean of normal distribution.
+            std (float): Standard deviation of normal distribution.
+        """
         for m in self._modules:
             normal_init(self._modules[m], mean, std)
 
+
     def forward(self, first, mid, last):
+        """
+        Forward pass of PatchGAN.
+
+        Args:
+            first (Tensor): First frames' image tensors.
+            mid (Tensor): Middle frames' image tensors, can be real or generated.
+            last (Tensor): Last frames' image tensors.
+
+        Returns:
+            x (Tensor): Patches with values between 0 and 1 due to the sigmoid activation.
+        """
         x = torch.cat([first, mid, last], dim=1)
         x = self.model(x)
 

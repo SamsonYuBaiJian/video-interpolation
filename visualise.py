@@ -23,7 +23,7 @@ if __name__ == '__main__':
         transforms.ToTensor()
     ])
 
-    # make sure the three frames to be predicted are in the right order
+    # make sure the two frames to be interpolated are in the right order
     frames = sorted([i for i in os.listdir(args.frames_path) if os.path.isfile(os.path.join(args.frames_path, i))])
 
     # process frames

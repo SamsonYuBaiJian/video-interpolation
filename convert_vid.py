@@ -15,6 +15,15 @@ if __name__ == '__main__':
     parser.add_argument('--saved_model_path', required=True)
     args = parser.parse_args()
 
+    # set up model
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = torch.load(args.saved_model_path, map_location=torch.device(device))
+    model.eval()
+    
+    transforms = transforms.Compose([
+        transforms.ToTensor()
+    ])
+
     # set up video capture
     video_capture = cv2.VideoCapture(args.vid_path)
     fps = video_capture.get(cv2.CAP_PROP_FPS)
@@ -24,36 +33,41 @@ if __name__ == '__main__':
     width, height = image.shape[1], image.shape[0]
     video_writer = cv2.VideoWriter('./project' + '.mp4', cv2.VideoWriter_fourcc(*'MP4V') , fps*2.0, (width, height))
 
+    # first frame
     frame1 = image
-    gen_frame2 = 0
-    frame2 = 0
+    gen_frame2 = None
+    frame2 = None
 
     # Write the first frame of the video
     video_writer.write(frame1)
 
+    cnt = 0
+
     while success:  
-        success,image = video_capture.read()
+        success, image = video_capture.read()
         frame2 = image
 
-        gen_frame2 = frame1 # TODO: insert function that genertes frame 2
+        # do generation
+        frame1_tensor = transforms(frame1)
+        frame2_tensor = transforms(frame2)
+        with torch.no_grad():
+            gen_frame, _, _, _, _ = model(frame1_tensor.unsqueeze(0).to(device), frame2_tensor.unsqueeze(0).to(device))
+        gen_frame = gen_frame.squeeze(0).numpy().transpose((1, 2, 0))
+        gen_frame = (gen_frame * 255).astype(np.uint8)
 
         frame1 = image
 
-        video_writer.write(gen_frame2)
+        video_writer.write(gen_frame)
         video_writer.write(frame2)
+
+        cnt += 1
+        print(cnt)
+
+        if cnt >120:
+            break
 
     video_writer.release()
     video_capture.release()
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = torch.load(args.saved_model_path, map_location=torch.device(device))
-    model.eval()
-    
-    transforms = transforms.Compose([
-        transforms.ToTensor()
-    ])
-
-    os.makedirs(args.save_vid_path, exist_ok=True)
 
     # frames = sorted(os.listdir(args.vid_path))
     # for i in range(len(frames)):

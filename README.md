@@ -1,6 +1,12 @@
 # Video Frame Interpolation
-
 ## Requirements
+- torch
+- numpy
+- cv2
+- argparse
+- PIL
+- skimage.metrics
+- matplotlib
 
 ## Features
 - [X] Create dataloader: `./dataloader.py`
@@ -11,13 +17,10 @@
 - [X] Training/validation loops and saving statistics: `./train.py`
 - [X] Plotting statistics: `./plot_stats.py`
 - [X] Video converter: `./convert_vid.py`
-- [X] Visualisations: optical flow estimates and weight maps
+- [X] Visualisations for generations, optical flow estimates and weight maps: `.visualise.py`
 
-## Visualisations for GUI
-- Only multiples of 8
+## Running the Code
+- Visualisations: `python3 visualise.py --frames_path /path/to/folder/with/images --saved_model_path /path/to/model/weights.pt`
 
-## References
-- Vimeo-90k: http://toflow.csail.mit.edu/
-- U-Net: https://github.com/jvanvugt/pytorch-unet
-- RRIN
-- PSNR and SIIM: https://scikit-image.org/docs/dev/api/skimage.metrics.html
+## References:
+- https://github.com/HopLee6/RRIN
