@@ -231,7 +231,7 @@ class Net(nn.Module):
         Args:
             frame0 (Tensor): First frames' image tensors.
             frame1 (Tensor): Last frames' image tensors.
-            t (float, optional): Time interval between frame0 and frame1 to generate the interpolated frame for, ranges from 0 to 1.
+            t (float, optional): Timestep between frame0 and frame1 to generate the interpolated frame for, ranges from 0 to 1.
         """
         output, flow_t_0, flow_t_1, w1, w2 = self.process(frame0, frame1, t)
         # compose = torch.cat((frame0, frame1, output), 1)

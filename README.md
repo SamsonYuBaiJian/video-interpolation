@@ -16,10 +16,18 @@
 - [X] Evaluation metrics (peak signal-to-noise ratio and structural similarity index measure): `./evaluate.py`
 - [X] Training/validation loops and saving statistics: `./train.py`
 - [X] Plotting statistics: `./plot_stats.py`
+- [X] Generate interpolated frame, optical flow estimates and weight maps: `./generate.py`
 - [X] Video converter: `./convert_vid.py`
-- [X] Visualisations for generations, optical flow estimates and weight maps: `.visualise.py`
 
-## Running the Code
+## Training
+
+## Generation
+This generates the interpolated middle frame of 2 frames, and the corresponding optical flow estimates and weight maps.
+
+`python3 generate.py --frames_path /path/to/folder/with/two/frames/ --saved_model_path /path/to/model/weights.pt --t 0.5`
+
+## Video Conversion
+
 - Visualisations: `python3 visualise.py --frames_path /path/to/folder/with/images --saved_model_path /path/to/model/weights.pt`
 
 ## References:
