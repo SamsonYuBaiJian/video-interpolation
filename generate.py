@@ -31,6 +31,17 @@ if __name__ == '__main__':
     last_path = os.path.join(args.frames_path, frames[1])
     first = PIL.Image.open(first_path)
     last = PIL.Image.open(last_path)
+
+    # check if width and height are divisible by 64, if not, padding is necessary
+    if width % 64 != 0:
+        width_pad = int((np.floor(width / 64) + 1) * 64 - width)
+    else:
+        width_pad = 0
+    if height % 64 != 0:
+        height_pad = int((np.floor(height / 64) + 1) * 64 - height)
+    else:
+        height_pad = 0
+
     first = transforms(first)
     last = transforms(last)
 
@@ -45,7 +56,7 @@ if __name__ == '__main__':
     # save middle frame prediction
     img_recon = img_recon.squeeze(0).numpy().transpose((1, 2, 0)) * 255
     img_recon = img_recon.astype(np.uint8)
-    PIL.Image.fromarray(img_recon).save("{}/predicted_{}.jpg".format(save_path, args.t))
+    PIL.Image.fromarray(img_recon).save("{}/predicted_t={}.jpg".format(save_path, args.t))
 
     # save bidirectional optical flows
     flow_t_0 = flow_t_0.squeeze(0).numpy().transpose((1, 2, 0))
@@ -55,7 +66,7 @@ if __name__ == '__main__':
     hsv_t_0[..., 0] = ang * 180 / np.pi / 2
     hsv_t_0[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
     bgr_t_0 = cv2.cvtColor(hsv_t_0, cv2.COLOR_HSV2BGR)
-    PIL.Image.fromarray(bgr_t_0).save("{}/flow_t_0.jpg".format(save_path))
+    PIL.Image.fromarray(bgr_t_0).save("{}/flow_t_0_t={}.jpg".format(save_path, args.t))
 
     flow_t_1 = flow_t_1.squeeze(0).numpy().transpose((1, 2, 0))
     hsv_t_1 = np.zeros((flow_t_1.shape[0], flow_t_1.shape[1], 3), dtype=np.uint8)
@@ -64,10 +75,10 @@ if __name__ == '__main__':
     hsv_t_1[..., 0] = ang * 180 / np.pi / 2
     hsv_t_1[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
     bgr_t_1 = cv2.cvtColor(hsv_t_1, cv2.COLOR_HSV2BGR)
-    PIL.Image.fromarray(bgr_t_1).save("{}/flow_t_1.jpg".format(save_path))
+    PIL.Image.fromarray(bgr_t_1).save("{}/flow_t_1_t={}.jpg".format(save_path, args.t))
 
     # save bidirectional weight maps
     w1 = w1.squeeze().numpy()
-    PIL.Image.fromarray((w1 * 255).astype(np.uint8), 'L').save("{}/weight_map_t_0.jpg".format(save_path))
+    PIL.Image.fromarray((w1 * 255).astype(np.uint8), 'L').save("{}/weight_map_t_0_t={}.jpg".format(save_path, args.t))
     w2 = w2.squeeze().numpy()
-    PIL.Image.fromarray((w2 * 255).astype(np.uint8), 'L').save("{}/weight_map_t_1.jpg".format(save_path))
+    PIL.Image.fromarray((w2 * 255).astype(np.uint8), 'L').save("{}/weight_map_t_1_t={}.jpg".format(save_path, args.t))

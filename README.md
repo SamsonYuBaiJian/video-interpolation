@@ -21,8 +21,9 @@ The pretrained weights for our 4 experiments can be found in the `weights` folde
 The experimental data folders for our 4 experiments can be found in the `exps` folder, with the format `exps_{learning_rate}_{batch_size}`. Refer to the "Plot Statistics" section to know how to visualise the data.
 
 ### Generated Images
-
-
+Some of our generated samples can be found in the `results` folder:
+- `happiness_facial`: results for a facial expression of happiness from the Human ID Project at the The University of Texas at Dallas.
+- `vimeo_90k_test`: results for the triplet `00001/0830` in Vimeo-90k, which is part of the test set.
 
 ## Running the Code
 ### Training
