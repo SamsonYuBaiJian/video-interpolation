@@ -10,9 +10,9 @@ import time
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--vimeo_90k_path', type=str, required=True)
-    parser.add_argument('--saved_model_path', type=str, required=True)
-    parser.add_argument('--time_check_every', type=int, default=20)
+    parser.add_argument('--vimeo_90k_path', type=str, required=True, help="path to your Vimeo-90k folder")
+    parser.add_argument('--saved_model_path', type=str, required=True, help="path to your saved model weights")
+    parser.add_argument('--time_check_every', type=int, default=20, help="how often you want to print estimated timings, by number of batches")
     args = parser.parse_args()
 
     # load model

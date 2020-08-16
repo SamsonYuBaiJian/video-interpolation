@@ -10,9 +10,9 @@ import os
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--vid_path', required=True)
-    parser.add_argument('--save_vid_path', required=True)
-    parser.add_argument('--saved_model_path', required=True)
+    parser.add_argument('--vid_path', required=True, help="path to your input video")
+    parser.add_argument('--save_vid_path', required=True, help="path to save your converted video")
+    parser.add_argument('--saved_model_path', required=True, help="path to your saved model weights")
     args = parser.parse_args()
 
     # set up model
@@ -21,6 +21,7 @@ if __name__ == '__main__':
     model.eval()
     
     transforms = transforms.Compose([
+        transforms.Pad((0,4,0,4)),
         transforms.ToTensor()
     ])
 
@@ -31,7 +32,7 @@ if __name__ == '__main__':
 
     # set up video writer
     width, height = image.shape[1], image.shape[0]
-    video_writer = cv2.VideoWriter('./project' + '.mp4', cv2.VideoWriter_fourcc(*'MP4V') , fps*2.0, (width, height))
+    video_writer = cv2.VideoWriter('{}.mp4'.format(args.save_vid_path), cv2.VideoWriter_fourcc(*'MP4V') , fps*2.0, (width, height))
 
     # first frame
     frame1 = image
@@ -52,7 +53,7 @@ if __name__ == '__main__':
         frame2_tensor = transforms(frame2)
         with torch.no_grad():
             gen_frame, _, _, _, _ = model(frame1_tensor.unsqueeze(0).to(device), frame2_tensor.unsqueeze(0).to(device))
-        gen_frame = gen_frame.squeeze(0).numpy().transpose((1, 2, 0))
+        gen_frame = gen_frame.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         gen_frame = (gen_frame * 255).astype(np.uint8)
 
         frame1 = image
@@ -63,29 +64,5 @@ if __name__ == '__main__':
         cnt += 1
         print(cnt)
 
-        if cnt >120:
-            break
-
     video_writer.release()
     video_capture.release()
-
-    # frames = sorted(os.listdir(args.vid_path))
-    # for i in range(len(frames)):
-    #     if i % 2 == 0:
-    #         first_path = os.path.join(args.frames_path, frames[i])
-    #         last_path = os.path.join(args.frames_path, frames[i+2])
-    #         first = PIL.Image.open(first_path)
-    #         last = PIL.Image.open(last_path)
-
-    #         first = transforms(first)
-    #         last = transforms(last)
-
-    #         with torch.no_grad():
-    #             img_recon = model(first.unsqueeze(0).to(device), last.unsqueeze(0).to(device))
-            
-    #         img_recon = img_recon.squeeze(0)
-    #         img_recon = img_recon.numpy().transpose((1, 2, 0))
-    #         first = first.numpy().transpose((1, 2, 0))
-
-    #         PIL.Image.fromarray((first * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i))
-    #         PIL.Image.fromarray((img_recon * 255).astype(np.uint8)).save("{}/{}.jpg".format(args.save_vid_dir, i + 1))

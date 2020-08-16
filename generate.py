@@ -9,9 +9,9 @@ import os
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--frames_path', required=True)
-    parser.add_argument('--saved_model_path', required=True)
-    parser.add_argument('--t', default=0.5, type=float)
+    parser.add_argument('--frames_path', required=True, help="directory containing the frames you want to interpolate with")
+    parser.add_argument('--saved_model_path', required=True, help="path to your saved model weights")
+    parser.add_argument('--t', default=0.5, type=float, metavar='[0-1]', help="timestep for interpolation")
     args = parser.parse_args()
 
     # load pretrained model

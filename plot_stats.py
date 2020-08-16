@@ -59,8 +59,8 @@ def plot_stats(exp_dir, save):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exp_dir', required=True)
-    parser.add_argument('--save', action='store_true')
+    parser.add_argument('--exp_dir', required=True, help="path to any experiment folder containing the 2 pickle files from the training process")
+    parser.add_argument('--save', action='store_true', help="specify if you want to autosave the graph")
     args = parser.parse_args()
 
     plot_stats(args.exp_dir, args.save)

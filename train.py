@@ -33,16 +33,16 @@ def save_stats(save_dir, exp_time, hyperparams, stats):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_epochs', default=20, type=int)
-    parser.add_argument('--lr', default=1e-4, type=float)
-    parser.add_argument('--batch_size', default=4, type=int)
-    parser.add_argument('--vimeo_90k_path', type=str, required=True)
-    parser.add_argument('--save_stats_path', type=str, required=True)
-    parser.add_argument('--eval_every', default=1, type=int)
-    parser.add_argument('--max_num_images', default=None)
-    parser.add_argument('--save_model_path', default='./model.pt', required=True)
-    parser.add_argument('--time_it', action='store_true')
-    parser.add_argument('--time_check_every', default=20, type=int)
+    parser.add_argument('--num_epochs', default=20, type=int, help="number of epochs to train for")
+    parser.add_argument('--lr', default=1e-4, type=float, help="learning rate")
+    parser.add_argument('--batch_size', default=4, type=int, help="batch size")
+    parser.add_argument('--vimeo_90k_path', type=str, required=True, help="path to your Vimeo-90k folder")
+    parser.add_argument('--save_stats_path', type=str, required=True, help="path where you want to save your experiment details")
+    parser.add_argument('--eval_every', default=1, type=int, help="how often to evaluate on the validation set")
+    parser.add_argument('--max_num_images', default=None, help="specify if you do not want to train on all images")
+    parser.add_argument('--save_model_path', required=True, type=str, help="path to save your trained weights, should end with .pt")
+    parser.add_argument('--time_it', action='store_true', help="whether you want to print estimated timings")
+    parser.add_argument('--time_check_every', default=20, type=int, help="how often you want to print estimated timings, by number of batches")
     args = parser.parse_args()
 
     # process information to save statistics
