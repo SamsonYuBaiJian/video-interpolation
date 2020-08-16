@@ -39,7 +39,7 @@ Some of our generated samples can be found in the `results` folder:
 ### Plot Statistics
 `python3 plot_stats.py --exp_dir path/to/experiment/folder/`
 
-- This plots the loss graphs for an experiment
+- This plots the loss graphs for an experiment.
 
 ### Model Evaluation
 `python3 evaluate.py --vimeo_90k_path /path/to/vimeo-90k/ --saved_model_path /path/to/model/weights.pt`
@@ -53,13 +53,14 @@ Some of our generated samples can be found in the `results` folder:
 - The frames in your `--frames_path` will be sorted, only the first and second frames will be used.
 - A folder containing the outputs will be created in your `--frames_path`.
 - This is optional, but you can set the timestep for interpolation with `--t`. It can range from 0 to 1, with 0.5 being the midpoint and the default value.
-- NOTE: The two input frames must have the same size, but can handle inputs of variable sizes otherwise.
+- NOTE: The two input frames must have the same size, but can be any size individually.
 
 ### Video Conversion
 `python3 convert_vid.py --vid_path /path/to/input/video.mp4 --save_vid_path /path/to/save/video.mp4 --saved_model_path /path/to/model/weights.pt`
 
 - You can use `--print_every` to specify the frame interval for printing progress.
-- NOTE: The two input frames must have the same size, but can handle inputs of variable sizes otherwise.
+- NOTE: The two input frames must have the same size, but can be any size individually.
 
 ## References:
 - https://github.com/HopLee6/RRIN
+- http://toflow.csail.mit.edu/
