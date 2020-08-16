@@ -31,7 +31,7 @@ if __name__ == '__main__':
     width, height = image.shape[1], image.shape[0]
     video_writer = cv2.VideoWriter('{}.mp4'.format(args.save_vid_path), cv2.VideoWriter_fourcc(*'MP4V') , fps*2.0, (width, height))
 
-    # check if width and height are divisible by 64, if not, padding is necessary
+    # check if width and height are divisible by 64, if not, padding is necessary to make inputs work with model's skip connections
     if width % 64 != 0:
         width_pad = int((np.floor(width / 64) + 1) * 64 - width)
     else:
@@ -40,7 +40,6 @@ if __name__ == '__main__':
         height_pad = int((np.floor(height / 64) + 1) * 64 - height)
     else:
         height_pad = 0
-
     transforms = transforms.Compose([
         transforms.Pad((width_pad, height_pad, 0, 0)),
         transforms.ToTensor()
@@ -48,15 +47,12 @@ if __name__ == '__main__':
 
     # first frame
     frame1 = image
-    gen_frame2 = None
-    frame2 = None
-
     # Write the first frame of the video
     video_writer.write(frame1)
 
     cnt = 1
 
-    print("Starting video conversion...")
+    print("Starting video conversion, printing progress every {} frames...".format(args.print_every))
     while success:  
         success, image = video_capture.read()
         frame2 = image
@@ -69,6 +65,8 @@ if __name__ == '__main__':
             gen_frame, _, _, _, _ = model(frame1_tensor.unsqueeze(0).to(device), frame2_tensor.unsqueeze(0).to(device))
         gen_frame = gen_frame.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         gen_frame = (gen_frame * 255).astype(np.uint8)
+
+        # get rid of padding for writing to video writer
         if width_pad > 0:
             gen_frame = gen_frame[:,width_pad:,:]
         if height_pad > 0:
@@ -83,6 +81,8 @@ if __name__ == '__main__':
         
         if cnt % args.print_every == 0:
             print('{} / {} frames left.'.format(frame_count - cnt, frame_count))
+    
+    print("Done!")
 
     video_writer.release()
     video_capture.release()
